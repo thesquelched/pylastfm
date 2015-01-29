@@ -52,3 +52,5 @@ docs/_build/
 
 # PyBuilder
 target/
+.venv
+lastfm_old.py
