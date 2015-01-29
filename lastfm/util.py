@@ -47,8 +47,12 @@ class Signer(object):
 
     NO_SIGN = frozenset(('api_sig', 'format'))
 
-    def __init__(self, api_info):
-        self._api_info = api_info
+    def __init__(self, client):
+        self._client = client
+
+    @property
+    def api_info(self):
+        return self._client.api_info
 
     def sign(self, **params):
         """
@@ -57,13 +61,13 @@ class Signer(object):
         :param kwargs: Parameters/data to LastFM HTTP request
         :returns: API signature
         """
-        if self._api_info.session_key is not None:
-            params.update(sk=self._api_info.session_key)
+        if self.api_info.session_key is not None:
+            params.update(sk=self.api_info.session_key)
 
         keystr = ''.join('{0}{1}'.format(key, params[key])
                          for key in sorted(params)
                          if key not in self.NO_SIGN)
-        with_secret = keystr + self._api_info.secret
+        with_secret = keystr + self.api_info.secret
         return hashlib.md5(with_secret.encode('utf-8')).hexdigest()
 
     def __call__(self, **params):

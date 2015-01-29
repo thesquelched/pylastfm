@@ -53,7 +53,7 @@ class Password(Authenticator):
         self._password = password
         self._hashed = hashed
 
-    def session(self):
+    def session_key(self):
         """Get a LastFM session key"""
 
         # The user told us whether or not the password is hashed
