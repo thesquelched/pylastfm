@@ -77,23 +77,32 @@ class Password(Authenticator):
 
     def _authenticate_maybe_hashed(self, hashed):
         if hashed:
-            password = self._password
+            pwhash = self._password
         else:
-            password = hashlib.md5(self._password.encode('utf-8')).hexdigest()
+            pwhash = hashlib.md5(self._password.encode('utf-8')).hexdigest()
+
+        authtoken = hashlib.md5(
+            (self._username + pwhash).encode('utf-8')
+        ).hexdigest()
 
         postdata = dict(
+            method='auth.getMobileSession',
             username=self._username,
-            password=password,
+            authToken=authtoken,
             api_key=self.api_key,
             format='json',
         )
         try:
             resp = requests.post(
-                self.url + 'auth.getMobileSession',
+                self.url,
                 data=self.sign(**postdata))
             resp.raise_for_status()
         except requests.exceptions.RequestException as exc:
             six.raise_from(AuthenticationError('Unable to get session'), exc)
+
+        data = resp.json()
+        if 'error' in data:
+            raise AuthenticationError(data.get('message'))
 
         return resp.json()['session']['key']
 

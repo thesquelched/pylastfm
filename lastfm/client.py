@@ -45,14 +45,14 @@ class LastFM(object):
                  password=None,
                  password_hashed=None,
                  url=None):
-        self._api_info = ApiInfo(
+        self._api_info = api_info = ApiInfo(
             api_key,
             api_secret,
             url=url or constants.DEFAULT_URL)
 
         self._signer = signer = Signer(self._api_info)
         self._auth = auth.Password(signer,
-                                   self._info,
+                                   api_info,
                                    username,
                                    password,
                                    hashed=password_hashed)
