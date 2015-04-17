@@ -6,7 +6,7 @@ from lastfm.client import ApiInfo
 
 
 @pytest.fixture
-def client():
+def mock_client():
     return MagicMock(
         api_info=ApiInfo(url='url',
                          key='key',
@@ -24,8 +24,8 @@ def session_client():
     )
 
 
-def test_signer(client):
-    signer = Signer(client)
+def test_signer(mock_client):
+    signer = Signer(mock_client)
 
     assert signer.sign() == '5ebe2294ecd0e0f08eab7690d2a6ee69'
 

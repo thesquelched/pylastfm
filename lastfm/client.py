@@ -1,6 +1,17 @@
-from lastfm import auth
-from lastfm.util import Signer
-from lastfm import constants
+from itertools import chain
+import six
+
+from lastfm.response.common import PaginateMixin
+from lastfm import auth, constants
+from lastfm.util import Signer, PaginatedIterator
+from lastfm.api import user
+
+
+import requests
+
+
+AUTHENTICATED_METHODS = frozenset([
+])
 
 
 class ApiInfo(object):
@@ -40,14 +51,6 @@ class ApiInfo(object):
             session_key=session_key)
 
 
-def authenticated(func):
-    def wrapper(self, *args, **kwargs):
-        if not self.api_info.authenticated:
-            self.authenticate()
-
-        return func(self, *args, **kwargs)
-
-
 class LastFM(object):
 
     def __init__(self,
@@ -55,7 +58,6 @@ class LastFM(object):
                  api_secret,
                  username=None,
                  password=None,
-                 password_hashed=None,
                  url=None,
                  session_key=None):
         self._api_info = api_info = ApiInfo(
@@ -68,8 +70,9 @@ class LastFM(object):
         self._auth = auth.Password(signer,
                                    api_info,
                                    username,
-                                   password,
-                                   hashed=password_hashed)
+                                   password)
+
+        self.user = user.UserAPI(self)
 
     @property
     def api_info(self):
@@ -90,3 +93,71 @@ class LastFM(object):
         self.api_info = self.api_info.add_session_key(session_key)
 
         return self
+
+    def _sign(self, params):
+        """
+        Sign the request parameters to send to the LastFM API
+        """
+        if not self.api_info.authenticated:
+            self.authenticate()
+
+        return self._signer(params)
+
+    def _request(self, http_method, method, unwrap=None, params=None,
+                 **kwargs):
+        """
+        Make a LastFM API request, returning the parsed JSON from the response.
+        """
+        if params is None:
+            params = {}
+
+        params.update(api_key=self.api_info.key,
+                      method=method,
+                      format='json')
+
+        if method in AUTHENTICATED_METHODS:
+            params = self._sign(params)
+
+        resp = requests.request(http_method,
+                                self.api_info.url,
+                                params=params,
+                                **kwargs)
+        resp.raise_for_status()
+
+        data = resp.json()
+        return data[unwrap] if unwrap else data
+
+    def _paginate_request(self, http_method, method, collection_key,
+                          params=None, **kwargs):
+        if params is None:
+            params = {}
+        params.update(limit=200)
+
+        resp = self._request(http_method, method, params=params, **kwargs)
+        if collection_key not in resp and resp.get('total') == '0':
+            resp[collection_key] = []
+            return resp
+
+        attributes = PaginateMixin(resp).attributes
+
+        pagerange = six.moves.range(2, attributes.total_pages + 1)
+
+        def pagequery(page, http_method=http_method, method=method,
+                      collection_key=collection_key, kwargs=kwargs):
+            params = kwargs.copy()
+            params['page'] = page
+
+            data = self._request(http_method, method, params=params, **kwargs)
+            return data[collection_key]
+
+        thispage = resp[collection_key]
+        remaining_pages = chain.from_iterable(pagequery(page)
+                                              for page in pagerange)
+        iterator = chain(thispage, remaining_pages)
+
+        resp[collection_key] = PaginatedIterator(
+            attributes.total_pages,
+            attributes.total,
+            iterator)
+
+        return resp
