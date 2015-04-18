@@ -1,13 +1,14 @@
-class UserAPI(object):
+from lastfm.api.api import API
+from lastfm.response.common import ArtistTrack, BannedTrack
 
-    def __init__(self, client):
-        self._client = client
+
+class User(API):
 
     def get_artist_tracks(self, user, artist, start=None, end=None):
         """
         Get artist tracks scrobbled by the user
         """
-        return self._client._paginate_request(
+        resp = self._client._paginate_request(
             'GET',
             'user.getArtistTracks',
             'track',
@@ -17,3 +18,21 @@ class UserAPI(object):
                         start=start,
                         end=end)
         )
+        return (ArtistTrack(track, client=self._client)
+                for track in resp['track'])
+
+    def get_banned_tracks(self, user):
+        """
+        Get tracks banned by the user.
+
+        http://www.last.fm/api/show/user.getBannedTracks
+        """
+        resp = self._client._paginate_request(
+            'GET',
+            'user.getBannedTracks',
+            'track',
+            unwrap='bannedtracks',
+            params=dict(user=user),
+        )
+        return (BannedTrack(track, client=self._client)
+                for track in resp['track'])

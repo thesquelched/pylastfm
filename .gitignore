@@ -55,3 +55,4 @@ target/
 .venv
 lastfm_old.py
 *.pickle
+test.conf

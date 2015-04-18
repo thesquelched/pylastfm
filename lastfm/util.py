@@ -1,48 +1,11 @@
 from six.moves import range
-import six
 from functools import wraps
 import itertools
 import logging
 import hashlib
-from datetime import datetime
-
-from dateutil.parser import parse as dateparse
 
 
 LOGGER = logging.getLogger('lastfm')
-
-
-def parse_date(value):
-    """
-    Parse date from either a datestring or a dict with the datestring in the
-    '#text' element.
-    """
-    if isinstance(value, datetime):
-        return value
-    elif isinstance(value, six.text_type):
-        return dateparse(value)
-
-    return dateparse(value['#text'])
-
-
-def parse_image(value):
-    """
-    Parse image URL from a dict or a string
-    """
-    if isinstance(value, six.text_type):
-        return value
-
-    return value['#text']
-
-
-def parse_bool_from_int(value):
-    if isinstance(value, bool):
-        return value
-
-    if isinstance(value, six.text_type):
-        return bool(int(value))
-
-    return bool(int(value['#text']))
 
 
 def retry(attempts=2):

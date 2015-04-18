@@ -72,7 +72,7 @@ class LastFM(object):
                                    username,
                                    password)
 
-        self.user = user.UserAPI(self)
+        self.user = user.User(self)
 
     @property
     def api_info(self):
