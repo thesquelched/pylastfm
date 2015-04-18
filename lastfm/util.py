@@ -3,6 +3,8 @@ from functools import wraps
 import itertools
 import logging
 import hashlib
+from datetime import datetime
+from dateutil.parser import parse as dateparse
 
 
 LOGGER = logging.getLogger('lastfm')
@@ -100,3 +102,26 @@ class PaginatedIterator(object):
 
     def __repr__(self):
         return '<PaginatedIterator({} pages)>'.format(self._pages)
+
+
+def query_date(value):
+    """Format value into a suitable date for the API"""
+    if value is None:
+        return value
+
+    if isinstance(value, datetime):
+        return int(datetime.timestamp())
+
+    # See if it's already a UNIX timestamp
+    try:
+        date = datetime.fromtimestamp(int(value))
+        assert date >= datetime.fromtimestamp(0)
+        return int(datetime.timestamp())
+    except (ValueError, AssertionError):
+        pass
+
+    # Try to parse a datestring
+    try:
+        return dateparse(value).timestamp()
+    except ValueError:
+        raise ValueError('Invalid timestamp: {}'.format(value))
