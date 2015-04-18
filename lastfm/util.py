@@ -116,3 +116,24 @@ class Signer(object):
         """
         params.update(api_sig=self.sign(**params))
         return params
+
+
+class PaginatedIterator(object):
+
+    def __init__(self, pages, total, iterator):
+        self._pages = max(1, pages)
+        self._total = total
+        self._iterator = iterator
+
+    def __iter__(self):
+        return self._iterator
+
+    def __len__(self):
+        return self._total
+
+    @property
+    def pages(self):
+        return self._pages
+
+    def __repr__(self):
+        return '<PaginatedIterator({} pages)>'.format(self._pages)

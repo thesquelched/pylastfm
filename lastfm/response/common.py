@@ -1,14 +1,15 @@
 from figgis import Config, Field
-from six import text_type
+
+
+def integer(value):
+    return int(value) if value else 0
 
 
 class PaginatedAttributes(Config):
 
-    page = Field(int)
-    totalPages = Field(int)
-    perPage = Field(int)
-    total = Field(int)
-    user = Field(text_type)
+    page = Field(integer, required=True)
+    total_pages = Field(integer, key='totalPages', required=True)
+    total = Field(integer, required=True)
 
 
 class PaginateMixin(Config):
