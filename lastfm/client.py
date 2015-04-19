@@ -1,5 +1,9 @@
 from itertools import chain
 import six
+import ssl
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.poolmanager import PoolManager
 
 from lastfm.response.common import PaginateMixin
 from lastfm import auth, constants
@@ -7,11 +11,15 @@ from lastfm.util import Signer, PaginatedIterator
 from lastfm.api import user
 
 
-import requests
-
-
 AUTHENTICATED_METHODS = frozenset([
 ])
+
+
+class TLSAdapter(HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False):
+        self.poolmanager = PoolManager(num_pools=connections,
+                                       maxsize=maxsize,
+                                       ssl_version=ssl.PROTOCOL_TLSv1)
 
 
 class ApiInfo(object):
@@ -72,6 +80,11 @@ class LastFM(object):
                                    username,
                                    password)
 
+        # Fix SSL issues for LastFM API
+        self._session = requests.Session()
+        self._session.mount(constants.DEFAULT_URL, TLSAdapter())
+
+        # Exposed API objects
         self.user = user.User(self)
 
     @property
@@ -118,10 +131,10 @@ class LastFM(object):
         if method in AUTHENTICATED_METHODS:
             params = self._sign(params)
 
-        resp = requests.request(http_method,
-                                self.api_info.url,
-                                params=params,
-                                **kwargs)
+        resp = self._session.request(http_method,
+                                     self.api_info.url,
+                                     params=params,
+                                     **kwargs)
         resp.raise_for_status()
 
         data = resp.json()
