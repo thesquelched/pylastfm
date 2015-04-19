@@ -1,20 +1,15 @@
-import six
-
-
-class LastFMError(Exception):
+class LastfmError(Exception):
     """Base class for LastFM exceptions"""
     pass
 
 
-class AuthenticationError(LastFMError):
+class AuthenticationError(LastfmError):
     pass
 
 
-class HttpError(LastFMError):
+class APIError(LastfmError):
+    """Internal API error"""
 
-    def __init__(self, code, *args):
-        self.code = code
-        if not args:
-            args = (six.text_type(code), )
-
-        super(HttpError, self).__init__(*args)
+    def __init__(self, code, message):
+        msg = 'Error {0}: {1}'.format(code, message)
+        super(APIError, self).__init__(msg)

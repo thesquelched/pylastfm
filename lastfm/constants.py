@@ -1,1 +1,1 @@
-DEFAULT_URL = 'https://ws.audioscrobbler.com/2.0/'
+DEFAULT_URL = 'http://ws.audioscrobbler.com/2.0/'

@@ -1,4 +1,4 @@
-from six.moves import range
+import six
 from functools import wraps
 import itertools
 import logging
@@ -21,7 +21,7 @@ def retry(attempts=2):
         def wrapper(*args, **kwArgs):
             last_error = None
 
-            for attempt in range(attempts):
+            for attempt in six.moves.range(attempts):
                 try:
                     return func(*args, **kwArgs)
                 except Exception as error:
@@ -94,7 +94,9 @@ class PaginatedIterator(object):
         return self._iterator
 
     def next(self):
-        return next(self._iterator)
+        return six.next(self._iterator)
+
+    __next__ = next
 
     def __len__(self):
         return self._total

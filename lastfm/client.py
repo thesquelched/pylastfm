@@ -1,12 +1,10 @@
 from itertools import chain
 import six
-import ssl
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
 
 from lastfm.response.common import PaginateMixin
-from lastfm import auth, constants
+from lastfm import auth, constants, error
 from lastfm.util import Signer, PaginatedIterator
 from lastfm.api import user
 
@@ -15,11 +13,8 @@ AUTHENTICATED_METHODS = frozenset([
 ])
 
 
-class TLSAdapter(HTTPAdapter):
-    def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = PoolManager(num_pools=connections,
-                                       maxsize=maxsize,
-                                       ssl_version=ssl.PROTOCOL_TLSv1)
+ERROR = 'error'
+MESSAGE = 'message'
 
 
 class ApiInfo(object):
@@ -82,7 +77,7 @@ class LastFM(object):
 
         # Fix SSL issues for LastFM API
         self._session = requests.Session()
-        self._session.mount(constants.DEFAULT_URL, TLSAdapter())
+        self._session.mount(constants.DEFAULT_URL, HTTPAdapter(max_retries=2))
 
         # Exposed API objects
         self.user = user.User(self)
@@ -131,13 +126,24 @@ class LastFM(object):
         if method in AUTHENTICATED_METHODS:
             params = self._sign(params)
 
-        resp = self._session.request(http_method,
-                                     self.api_info.url,
-                                     params=params,
-                                     **kwargs)
-        resp.raise_for_status()
+        try:
+            resp = self._session.request(http_method,
+                                         self.api_info.url,
+                                         params=params,
+                                         **kwargs)
+            resp.raise_for_status()
+        except requests.exceptions.HTTPError as exc:
+            six.raise_from(
+                error.ApiError(exc.response.status_code, exc.response.reason),
+                exc)
+        except requests.exceptions.RequestException as exc:
+            newexc = error.LastfmError('Request error: {0}'.format(exc))
+            six.raise_from(newexc, exc)
 
         data = resp.json()
+        if ERROR in data:
+            raise error.APIError(data[ERROR], data[MESSAGE])
+
         return data[unwrap] if unwrap else data
 
     def _paginate_request(self, http_method, method, collection_key,
