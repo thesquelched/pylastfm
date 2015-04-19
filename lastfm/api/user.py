@@ -19,8 +19,7 @@ class User(API):
                         start=query_date(start),
                         end=query_date(end))
         )
-        return (ArtistTrack(track, client=self._client)
-                for track in resp['track'])
+        return self.model_iterator(ArtistTrack, resp['track'])
 
     def get_banned_tracks(self, user):
         """
@@ -35,8 +34,7 @@ class User(API):
             unwrap='bannedtracks',
             params=dict(user=user),
         )
-        return (Track(track, client=self._client)
-                for track in resp['track'])
+        return self.model_iterator(Track, resp['track'])
 
     def get_loved_tracks(self, user):
         """
@@ -51,8 +49,7 @@ class User(API):
             unwrap='lovedtracks',
             params=dict(user=user),
         )
-        return (Track(track, client=self._client)
-                for track in resp['track'])
+        return self.model_iterator(Track, resp['track'])
 
     def get_recent_tracks(self, user, start=None, end=None):
         """
@@ -70,5 +67,4 @@ class User(API):
                     'to': query_date(end),
                     'extended': 1},
         )
-        return (RecentTrack(track, client=self._client)
-                for track in resp['track'])
+        return self.model_iterator(RecentTrack, resp['track'])

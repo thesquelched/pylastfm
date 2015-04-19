@@ -93,6 +93,9 @@ class PaginatedIterator(object):
     def __iter__(self):
         return self._iterator
 
+    def next(self):
+        return next(self._iterator)
+
     def __len__(self):
         return self._total
 
@@ -102,6 +105,14 @@ class PaginatedIterator(object):
 
     def __repr__(self):
         return '<PaginatedIterator({} pages)>'.format(self._pages)
+
+    def map(self, func):
+        """Return a new PaginatedIterator generated from mapping the function
+        to this iterator"""
+        return PaginatedIterator(
+            self._pages,
+            self._total,
+            (func(item) for item in self._iterator))
 
 
 def query_date(value):
