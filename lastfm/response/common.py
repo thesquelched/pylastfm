@@ -41,7 +41,7 @@ def extract(first, *rest, **kwargs):
 
 def images(value):
     """Converts list of image dicts to a single dict of (size, url) pairs"""
-    return {item['size']: item['#text'] for item in value}
+    return dict((item['size'], item['#text']) for item in value)
 
 
 class PaginatedAttributes(Config):
