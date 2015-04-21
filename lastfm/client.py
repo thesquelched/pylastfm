@@ -9,8 +9,18 @@ from lastfm.util import Signer, PaginatedIterator
 from lastfm.api import user
 
 
-AUTHENTICATED_METHODS = frozenset([
-])
+def prefixed(prfx, *methods):
+    """Return reach method prefixed by the given prefix"""
+    return ['{0}.{1}'.format(prfx, method) for method in methods]
+
+
+AUTHENTICATED_METHODS = frozenset(
+    prefixed('user',
+             'getRecentStations',
+             'getRecommendedArtists',
+             'getRecommendedEvents',
+             'shout')
+)
 
 
 ERROR = 'error'
@@ -111,26 +121,37 @@ class LastFM(object):
 
         return self._signer(**params)
 
-    def _request(self, http_method, method, unwrap=None, params=None,
-                 **kwargs):
+    def _request_args(self, http_method, method, kwargs):
+        if http_method in ('PUT', 'POST'):
+            data_key = 'data'
+        else:
+            data_key = 'params'
+
+        data = kwargs.get(data_key)
+        if data is None:
+            data = {}
+
+        data.update(api_key=self.api_info.key,
+                    method=method,
+                    format='json')
+
+        if method in AUTHENTICATED_METHODS:
+            data = self._sign(data)
+
+        kwargs[data_key] = data
+        return kwargs
+
+    def _request(self, http_method, method, unwrap=None, **kwargs):
         """
         Make a LastFM API request, returning the parsed JSON from the response.
         """
-        if params is None:
-            params = {}
-
-        params.update(api_key=self.api_info.key,
-                      method=method,
-                      format='json')
-
-        if method in AUTHENTICATED_METHODS:
-            params = self._sign(params)
+        http_method = http_method.upper()
+        request_args = self._request_args(http_method, method, kwargs)
 
         try:
             resp = self._session.request(http_method,
                                          self.api_info.url,
-                                         params=params,
-                                         **kwargs)
+                                         **request_args)
             resp.raise_for_status()
         except requests.exceptions.HTTPError as exc:
             six.raise_from(
@@ -140,11 +161,11 @@ class LastFM(object):
             newexc = error.LastfmError('Request error: {0}'.format(exc))
             six.raise_from(newexc, exc)
 
-        data = resp.json()
-        if ERROR in data:
-            raise error.APIError(data[ERROR], data[MESSAGE])
+        result = resp.json()
+        if ERROR in result:
+            raise error.APIError(result[ERROR], result[MESSAGE])
 
-        return data[unwrap] if unwrap else data
+        return result[unwrap] if unwrap else result
 
     def _paginate_request(self, http_method, method, collection_key,
                           params=None, **kwargs):

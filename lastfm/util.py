@@ -68,7 +68,8 @@ class Signer(object):
 
         keystr = ''.join('{0}{1}'.format(key, params[key])
                          for key in sorted(params)
-                         if key not in self.NO_SIGN)
+                         if params[key] is not None
+                         and key not in self.NO_SIGN)
         with_secret = keystr + self.api_info.secret
         return hashlib.md5(with_secret.encode('utf-8')).hexdigest()
 
