@@ -79,7 +79,8 @@ class Signer(object):
         :param kwargs: Parameters/data to LastFM HTTP request
         :returns: params updated with `api_sig=<signature>`
         """
-        params.update(api_sig=self.sign(**params))
+        params.update(sk=self.api_info.session_key,
+                      api_sig=self.sign(**params))
         return params
 
 

@@ -109,7 +109,7 @@ class LastFM(object):
         if not self.api_info.authenticated:
             self.authenticate()
 
-        return self._signer(params)
+        return self._signer(**params)
 
     def _request(self, http_method, method, unwrap=None, params=None,
                  **kwargs):
