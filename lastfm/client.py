@@ -1,7 +1,9 @@
-from itertools import chain
+import os
 import six
 import requests
+from itertools import chain
 from requests.adapters import HTTPAdapter
+from six.moves.configparser import SafeConfigParser
 
 from lastfm.response.common import PaginateMixin
 from lastfm import auth, constants, error
@@ -72,7 +74,21 @@ class LastFM(object):
                  username=None,
                  password=None,
                  url=None,
-                 session_key=None):
+                 session_key=None,
+                 auth_method=None):
+        """
+        Create a LastFM client
+
+        :param api_key: LastFM API key
+        :param api_secret: LastFM API secret
+        :param username: LastFM username
+        :param password: LastFM account password, either in plaintext
+            (password authentication) or hashed (hashed_password
+            authentication)
+        :param url: URL for the LastFM API
+        :param auth_method: Authentication method; can be 'password' (default)
+            or 'hashed_password'
+        """
         self._api_info = api_info = ApiInfo(
             api_key,
             api_secret,
@@ -80,10 +96,9 @@ class LastFM(object):
             session_key=session_key)
 
         self._signer = signer = Signer(self)
-        self._auth = auth.Password(signer,
-                                   api_info,
-                                   username,
-                                   password)
+
+        auth_class = auth.AUTH_METHODS[auth_method]
+        self._auth = auth_class(signer, api_info, username, password)
 
         # Fix SSL issues for LastFM API
         self._session = requests.Session()
@@ -91,6 +106,46 @@ class LastFM(object):
 
         # Exposed API objects
         self.user = user.User(self)
+
+    @classmethod
+    def _getoption(cls, config, params, key):
+        if key in params:
+            value = params[key]
+        else:
+            value = config.get('lastfm', key)
+
+        return value.strip()
+
+    @classmethod
+    def from_config(cls, path, **kwargs):
+        """
+        Create a LastFM instance from a config file in the following format:
+
+            [lastfm]
+            api_key = myapikey
+            api_secret = myapisecret
+            username = thesquelched
+            password = plaintext_password
+
+            # Can be 'password' or 'hashed_password'
+            auth_method = password
+
+        You can also override config values with keyword arguments.
+        """
+        config = SafeConfigParser()
+        config.add_section('lastfm')
+        for option in ('api_key', 'api_secret', 'username', 'password'):
+            config.set('lastfm', option, '')
+
+        config.read(os.path.expanduser(os.path.expandvars(path)))
+
+        return LastFM(
+            cls._getoption(config, kwargs, 'api_key'),
+            cls._getoption(config, kwargs, 'api_secret'),
+            username=cls._getoption(config, kwargs, 'username'),
+            password=cls._getoption(config, kwargs, 'password'),
+            auth_method=cls._getoption(config, kwargs, 'auth_method'),
+        )
 
     @property
     def api_info(self):
@@ -175,7 +230,7 @@ class LastFM(object):
 
         resp = self._request(http_method, method, params=params, **kwargs)
         if collection_key not in resp and resp.get('total') == '0':
-            resp[collection_key] = []
+            resp[collection_key] = PaginatedIterator(0, 0, iter([]))
             return resp
 
         attributes = PaginateMixin(resp).attributes

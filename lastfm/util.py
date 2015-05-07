@@ -63,14 +63,18 @@ class Signer(object):
         :param kwargs: Parameters/data to LastFM HTTP request
         :returns: API signature
         """
-        if self.api_info.session_key is not None:
+        if self.api_info.session_key:
             params.update(sk=self.api_info.session_key)
 
+        LOGGER.debug('Signing parameters: %s', params)
         keystr = ''.join('{0}{1}'.format(key, params[key])
                          for key in sorted(params)
                          if params[key] is not None and
                          key not in self.NO_SIGN)
+
         with_secret = keystr + self.api_info.secret
+        LOGGER.debug('Pre-hashed signature: %s', with_secret)
+
         return hashlib.md5(with_secret.encode('utf-8')).hexdigest()
 
     def __call__(self, **params):
@@ -80,8 +84,10 @@ class Signer(object):
         :param kwargs: Parameters/data to LastFM HTTP request
         :returns: params updated with `api_sig=<signature>`
         """
-        params.update(sk=self.api_info.session_key,
-                      api_sig=self.sign(**params))
+        params.update(api_sig=self.sign(**params))
+        if self.api_info.session_key:
+            params.update(sk=self.api_info.session_key)
+
         return params
 
 
@@ -119,24 +125,54 @@ class PaginatedIterator(object):
             (func(item) for item in self._iterator))
 
 
+def unix_timestamp(date):
+    return int((date - datetime(1970, 1, 1)).total_seconds())
+
+
 def query_date(value):
     """Format value into a suitable date for the API"""
     if value is None:
         return value
 
     if isinstance(value, datetime):
-        return int(datetime.timestamp())
+        return unix_timestamp(value)
 
     # See if it's already a UNIX timestamp
     try:
         date = datetime.fromtimestamp(int(value))
         assert date >= datetime.fromtimestamp(0)
-        return int(datetime.timestamp())
+        return unix_timestamp(date)
     except (ValueError, AssertionError):
         pass
 
     # Try to parse a datestring
     try:
-        return dateparse(value).timestamp()
+        return unix_timestamp(dateparse(value))
     except ValueError:
         raise ValueError('Invalid timestamp: {}'.format(value))
+
+
+def keywords(*keys, **defaultkeys):
+    """Decorator that helps handle functions that have a variable number of
+    keyword arguments in the function signature, but only expect certain
+    keywords. Checks that the keyword argument dictionary doesn't contain
+    extraneous keywords. Also injects key defaults into kwargs"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            extra_kwargs = set(kwargs).union(set(defaultkeys)) - set(keys)
+            if extra_kwargs:
+                raise TypeError(
+                    "{0}() got an unexpected keyword argument: '{1}'".format(
+                        six.next(func.__name__, iter(kwargs))))
+
+            for key in keys:
+                if key not in kwargs:
+                    kwargs[key] = None
+            for key, value in defaultkeys.items():
+                if key not in kwargs:
+                    kwargs[key] = value
+
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator

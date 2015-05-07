@@ -1,5 +1,6 @@
 from lastfm.error import AuthenticationError
 
+from collections import defaultdict
 import six
 import hashlib
 import logging
@@ -35,7 +36,7 @@ class Authenticator(object):
         raise NotImplementedError
 
 
-class Password(Authenticator):
+class PasswordAuthToken(Authenticator):
 
     HASH_LOWER = frozenset('abcdef0123456789')
     HASH_UPPER = frozenset('ABCDEFG0123456789')
@@ -47,7 +48,7 @@ class Password(Authenticator):
                  username,
                  password,
                  hashed=None):
-        super(Password, self).__init__(signer, api_info)
+        super(PasswordAuthToken, self).__init__(signer, api_info)
 
         self._username = username
         self._password = password
@@ -71,9 +72,10 @@ class Password(Authenticator):
                     'Could not authenticate, assuming password %s hashed',
                     'was' if hashed else 'was not',
                     exc_info=exc)
+                if hashed == hashed_tries[-1]:
+                    raise
 
-        raise AuthenticationError(
-            'Could not authenticate with username/password')
+        assert False, "This should never be reached"
 
     def _authenticate_maybe_hashed(self, hashed):
         if hashed:
@@ -92,6 +94,8 @@ class Password(Authenticator):
             api_key=self.api_key,
             format='json',
         )
+        LOGGER.debug('Authentication POST data: %s', postdata)
+
         try:
             resp = requests.post(
                 self.url,
@@ -112,3 +116,47 @@ class Password(Authenticator):
         chars = frozenset(pw)
         return len(pw) == 32 and (chars.issubset(self.HASH_LOWER) or
                                   chars.issubset(self.HASH_UPPER))
+
+
+class Password(Authenticator):
+
+    def __init__(self,
+                 signer,
+                 api_info,
+                 username,
+                 password):
+        super(Password, self).__init__(signer, api_info)
+
+        self._username = username
+        self._password = password
+
+    def session_key(self):
+        postdata = self.sign(
+            method='auth.getMobileSession',
+            username=self._username,
+            password=self._password,
+            api_key=self.api_key,
+            format='json',
+        )
+        LOGGER.debug('Authentication POST data: %s', postdata)
+
+        try:
+            resp = requests.post(
+                self.url.replace('http://', 'https://'),
+                data=postdata)
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            six.raise_from(AuthenticationError('Unable to get session'), exc)
+
+        data = resp.json()
+        if 'error' in data:
+            raise AuthenticationError(data.get('message'))
+
+        return resp.json()['session']['key']
+
+
+AUTH_METHODS = defaultdict(lambda: Password)
+AUTH_METHODS.update(
+    password=Password,
+    hashed_password=PasswordAuthToken,
+)
