@@ -9,7 +9,7 @@ from lastfm.response.common import PaginateMixin
 from lastfm import auth, constants, error
 from lastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
                          nested_set, ceildiv)
-from lastfm.api import user
+from lastfm.api import user, track
 
 
 def prefixed(prfx, *methods):
@@ -22,7 +22,17 @@ AUTHENTICATED_METHODS = frozenset(
              'getRecentStations',
              'getRecommendedArtists',
              'getRecommendedEvents',
-             'shout')
+             'shout') +
+    prefixed('track',
+             'addTags',
+             'ban',
+             'love',
+             'removeTag',
+             'scrobble',
+             'share',
+             'unban',
+             'unlove',
+             'updateNowPlaying')
 )
 
 
@@ -123,6 +133,7 @@ class LastFM(object):
 
         # Exposed API objects
         self.user = user.User(self)
+        self.track = track.Track(self)
 
     @classmethod
     def _getoption(cls, config, params, key):
@@ -217,7 +228,8 @@ class LastFM(object):
         kwargs[data_key] = data
         return kwargs
 
-    def _request(self, http_method, method, unwrap=None, **kwargs):
+    def _request(self, http_method, method, unwrap=None, collection_key=None,
+                 **kwargs):
         """
         Make a LastFM API request, returning the parsed JSON from the response.
         """
@@ -241,7 +253,12 @@ class LastFM(object):
         if ERROR in result:
             raise error.APIError(result[ERROR], result[MESSAGE])
 
-        return result[unwrap] if unwrap else result
+        unwrapped = result[unwrap] if unwrap else result
+        if collection_key is None:
+            return unwrapped
+
+        coll_keys = collection_key.split('.')
+        return _list_response(nested_get(unwrapped, coll_keys))
 
     def _paginate_request(self, http_method, method, collection_key,
                           perpage=None, limit=None, params=None,
@@ -272,11 +289,12 @@ class LastFM(object):
             pagerange = six.moves.range(2, attributes.total_pages + 1)
 
         def pagequery(page, http_method=http_method, method=method,
-                      coll_keys=coll_keys, params=params, kwargs=kwargs):
+                      collection_key=collection_key, params=params,
+                      kwargs=kwargs):
             params['page'] = page
 
-            data = self._request(http_method, method, params=params, **kwargs)
-            return _list_response(nested_get(data, coll_keys))
+            return self._request(http_method, method, params=params,
+                                 collection_key=collection_key, **kwargs)
 
         thispage = _list_response(nested_get(resp, coll_keys))
         remaining_pages = chain.from_iterable(pagequery(page)
