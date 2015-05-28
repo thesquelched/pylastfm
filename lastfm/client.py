@@ -7,7 +7,8 @@ from six.moves.configparser import SafeConfigParser
 
 from lastfm.response.common import PaginateMixin
 from lastfm import auth, constants, error
-from lastfm.util import Signer, PaginatedIterator
+from lastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
+                         nested_set, ceildiv)
 from lastfm.api import user
 
 
@@ -27,6 +28,21 @@ AUTHENTICATED_METHODS = frozenset(
 
 ERROR = 'error'
 MESSAGE = 'message'
+
+MAX_LIMIT = 200
+DEFAULT_LIMIT = MAX_LIMIT
+DEFAULT_PERPAGE = 200
+
+
+def _list_response(data):
+    """
+    If `data` is not a `list`, return a list with `data` as the only element.
+    Otherwise, return `data`
+    """
+    if not isinstance(data, list):
+        return [data]
+
+    return data
 
 
 class ApiInfo(object):
@@ -89,6 +105,7 @@ class LastFM(object):
         :param auth_method: Authentication method; can be 'password' (default)
             or 'hashed_password'
         """
+        self._username = username
         self._api_info = api_info = ApiInfo(
             api_key,
             api_secret,
@@ -146,6 +163,10 @@ class LastFM(object):
             password=cls._getoption(config, kwargs, 'password'),
             auth_method=cls._getoption(config, kwargs, 'auth_method'),
         )
+
+    @property
+    def username(self):
+        return self._username
 
     @property
     def api_info(self):
@@ -223,36 +244,47 @@ class LastFM(object):
         return result[unwrap] if unwrap else result
 
     def _paginate_request(self, http_method, method, collection_key,
-                          params=None, **kwargs):
+                          perpage=None, limit=None, params=None,
+                          paginate_attr_class=None, **kwargs):
+        if paginate_attr_class is None:
+            paginate_attr_class = PaginateMixin
+
+        if perpage is None:
+            perpage = DEFAULT_PERPAGE
+
         if params is None:
             params = {}
-        params.update(limit=200)
+        params.update(limit=perpage)
 
         resp = self._request(http_method, method, params=params, **kwargs)
-        if collection_key not in resp and resp.get('total') == '0':
-            resp[collection_key] = PaginatedIterator(0, 0, iter([]))
+
+        coll_keys = collection_key.split('.')
+        if not nested_in(resp, coll_keys) and resp.get('total') == '0':
+            nested_set(resp, coll_keys, PaginatedIterator(0, 0, iter([])))
             return resp
 
-        attributes = PaginateMixin(resp).attributes
+        attributes = paginate_attr_class(resp)
 
-        pagerange = six.moves.range(2, attributes.total_pages + 1)
+        if limit and limit < attributes.total:
+            n_pages = min(attributes.total_pages, ceildiv(limit, perpage))
+            pagerange = six.moves.range(2, n_pages + 1)
+        else:
+            pagerange = six.moves.range(2, attributes.total_pages + 1)
 
         def pagequery(page, http_method=http_method, method=method,
-                      collection_key=collection_key, kwargs=kwargs):
-            params = kwargs.copy()
+                      coll_keys=coll_keys, params=params, kwargs=kwargs):
             params['page'] = page
 
             data = self._request(http_method, method, params=params, **kwargs)
-            return data[collection_key]
+            return _list_response(nested_get(data, coll_keys))
 
-        thispage = resp[collection_key]
+        thispage = _list_response(nested_get(resp, coll_keys))
         remaining_pages = chain.from_iterable(pagequery(page)
                                               for page in pagerange)
         iterator = chain(thispage, remaining_pages)
 
-        resp[collection_key] = PaginatedIterator(
-            attributes.total_pages,
-            attributes.total,
-            iterator)
+        nested_set(resp, coll_keys, PaginatedIterator(attributes.total_pages,
+                                                      attributes.total,
+                                                      iterator))
 
         return resp
