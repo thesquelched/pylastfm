@@ -2,6 +2,8 @@ import six
 from figgis import Config, Field
 from dateutil.parser import parse as dateparse
 
+from lastfm.util import ceildiv
+
 
 def integer(value):
     return int(value) if value else 0
@@ -58,6 +60,34 @@ class PaginateMixin(Config):
     """
 
     attributes = Field(PaginatedAttributes, required=True, key='@attr')
+
+    @property
+    def page(self):
+        return self.attributes.page
+
+    @property
+    def total_pages(self):
+        return self.attributes.total_pages
+
+    @property
+    def total(self):
+        return self.attributes.total
+
+
+class SearchPaginateMixin(Config):
+
+    items_per_page = Field(integer, required=True,
+                           key='opensearch:itemsPerPage')
+    start_index = Field(integer, required=True, key='opensearch:startIndex')
+    total = Field(integer, required=True, key='opensearch:totalResults')
+
+    @property
+    def page(self):
+        return self.start_index // self.items_per_page
+
+    @property
+    def total_pages(self):
+        return ceildiv(self.total, self.items_per_page)
 
 
 ######################################################################

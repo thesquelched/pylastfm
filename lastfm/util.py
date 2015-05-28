@@ -10,6 +10,9 @@ from dateutil.parser import parse as dateparse
 LOGGER = logging.getLogger('lastfm')
 
 
+NOT_SPECIFIED = object()
+
+
 def retry(attempts=2):
     """Function retry decorator"""
 
@@ -160,11 +163,11 @@ def keywords(*keys, **defaultkeys):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            extra_kwargs = set(kwargs).union(set(defaultkeys)) - set(keys)
+            extra_kwargs = set(kwargs) - set(defaultkeys).union(keys)
             if extra_kwargs:
                 raise TypeError(
                     "{0}() got an unexpected keyword argument: '{1}'".format(
-                        six.next(func.__name__, iter(kwargs))))
+                        func.__name__, six.next(iter(kwargs))))
 
             for key in keys:
                 if key not in kwargs:
@@ -176,3 +179,51 @@ def keywords(*keys, **defaultkeys):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def nested_get(data, keys, default=NOT_SPECIFIED):
+    """
+    Return data[key1][key2]...[keyN]. Optionally takes a default for if any of
+    the keys in the sequence are missing. Unlike `dict.get`, this will throw
+    """
+    for key in keys:
+        try:
+            data = data[key]
+        except KeyError:
+            if default is NOT_SPECIFIED:
+                raise
+            else:
+                return default
+
+    return data
+
+
+def nested_set(data, keys, value):
+    """
+    Set `data[key1][key2]...[keyN] = value`
+    """
+    if not keys:
+        raise TypeError('At least one key is required')
+
+    for key in keys[:-1]:
+        data = data[key]
+
+    data[keys[-1]] = value
+
+
+def nested_in(data, keys):
+    """
+    Check if a series of keys is located in a nested dict
+    """
+    for key in keys:
+        try:
+            data = data[key]
+        except KeyError:
+            return False
+
+    return True
+
+
+def ceildiv(a, b):
+    """Integer ceiling division"""
+    return -(-a // b)
