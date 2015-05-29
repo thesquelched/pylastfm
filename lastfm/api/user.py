@@ -12,6 +12,8 @@ class User(API):
     def get_artist_tracks(self, user, artist, start=None, end=None):
         """
         Get artist tracks scrobbled by the user
+
+        http://www.last.fm/api/show/user.getArtistTracks
         """
         resp = self._client._paginate_request(
             'GET',

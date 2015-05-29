@@ -106,7 +106,7 @@ class _TrackBase(Config):
     name = Field(six.text_type, required=True)
     url = Field(six.text_type, required=True)
     mbid = Field(six.text_type, required=True)
-    date = Field(extract('#text', coerce=dateparse), required=True)
+    date = Field(extract('#text', coerce=dateparse))
     images = Field(images, default=[], key='image')
 
 
@@ -156,3 +156,63 @@ class RecentTrack(ApiConfig):
                           key='artist')
 
     loved = Field(bool_from_int, required=True)
+
+
+class CorrectedTrack(ApiConfig):
+
+    __inherits__ = [_TrackBase]
+
+    artist_name = Field(extract('name'), key='artist', required=True)
+    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
+                        required=True)
+    artist_url = Field(extract('mbid', coerce=string_or_null), key='artist')
+
+
+class Tag(Config):
+
+    name = Field(six.text_type, required=True)
+    url = Field(six.text_type)
+
+
+class Wiki(Config):
+
+    content = Field(six.text_type, required=True)
+    summary = Field(six.text_type, required=True)
+    published = Field(six.text_type, required=True)
+    published = Field(dateparse, required=True)
+
+
+class TrackInfo(ApiConfig):
+
+    __inherits__ = [_TrackBase]
+
+    streamable = Field(bool_from_int, required=True)
+
+    duration = Field(int, required=True)
+    id = Field(int, required=True)
+    listeners = Field(int, required=True)
+    playcount = Field(int, required=True)
+    toptags = Field(lambda value: [Tag(tag) for tag in value['tag']],
+                    required=True)
+    wiki = Field(Wiki, required=True)
+
+    album_name = Field(extract('title'), key='album', required=True)
+    album_mbid = Field(extract('mbid', coerce=string_or_null), key='album',
+                       required=True)
+    album_url = Field(extract('url', coerce=string_or_null), key='album')
+    album_images = Field(extract('image', coerce=images), default=[],
+                         key='album')
+
+    artist_name = Field(extract('name'), key='artist', required=True)
+    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
+                        required=True)
+    artist_url = Field(extract('mbid', coerce=string_or_null), key='artist')
+
+
+class SearchTrack(ApiConfig):
+
+    __inherits__ = [_TrackBase]
+
+    artist_name = Field(six.text_type, key='artist', required=True)
+    listeners = Field(int, required=True)
+    streamable = Field(bool_from_int, required=True)

@@ -1,10 +1,14 @@
 import pytest
+import logging
 from lastfm import LastFM
 from six.moves.configparser import SafeConfigParser
 
 
+LOG = logging.getLogger(__name__)
+
+
 CONFIG_DEFAULTS = dict(
-    client=dict(
+    lastfm=dict(
         api_key='api_key',
         api_secret='api_secret',
         username='username',
@@ -34,6 +38,8 @@ def config(request):
 
     if path:
         config.read([path])
+        with open(path) as f:
+            LOG.debug('Configuration:\n%s', f.read())
 
     return config
 
@@ -43,7 +49,7 @@ def client(request, config):
     def getoption(key):
         return (
             request.config.getoption('--' + key) or
-            config.get('client', key)
+            config.get('lastfm', key)
         )
 
     return LastFM(
