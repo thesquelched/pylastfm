@@ -3,7 +3,10 @@
 pylastfm
 ========
 
-Lazy LastFM API bindings in python
+Lazy LastFM API bindings in python.  Currently supports the following LastFM API methods:
+
+- `track.*`
+- `user.*`
 
 
 Pagination
