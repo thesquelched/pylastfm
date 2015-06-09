@@ -3,9 +3,9 @@ import itertools
 from types import GeneratorType
 from figgis import Config, Field
 
-from lastfm.response import common
-from lastfm.api.api import API
-from lastfm.util import keywords, query_date
+from pylastfm.response import common
+from pylastfm.api.api import API
+from pylastfm.util import keywords, query_date
 
 
 class Scrobble(Config):

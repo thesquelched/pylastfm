@@ -1,8 +1,8 @@
 import pytest
 from mock import MagicMock
 
-from lastfm.util import Signer, nested_set, nested_get, nested_in
-from lastfm.client import ApiInfo
+from pylastfm.util import Signer, nested_set, nested_get, nested_in
+from pylastfm.client import ApiInfo
 
 
 @pytest.fixture

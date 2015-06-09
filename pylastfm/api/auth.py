@@ -1,4 +1,4 @@
-from lastfm.api.api import API
+from pylastfm.api.api import API
 
 
 class Auth(API):

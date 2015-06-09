@@ -1,4 +1,4 @@
-from lastfm.response.common import PaginateMixin, Track
+from pylastfm.response.common import PaginateMixin, Track
 from figgis import Config, Field, ListField
 
 

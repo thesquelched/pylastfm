@@ -1,4 +1,4 @@
-from lastfm.response.common import ApiConfig
+from pylastfm.response.common import ApiConfig
 
 
 class API(object):

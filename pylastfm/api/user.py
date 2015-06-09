@@ -1,6 +1,6 @@
-from lastfm.api.api import API
-from lastfm.response.common import ArtistTrack, Track, RecentTrack
-from lastfm.util import query_date
+from pylastfm.api.api import API
+from pylastfm.response.common import ArtistTrack, Track, RecentTrack
+from pylastfm.util import query_date
 
 
 VALID_PERIODS = frozenset(['overall', '7day', '1month', '3month', '6month',

@@ -1,5 +1,5 @@
 import six
-from lastfm.util import PaginatedIterator
+from pylastfm.util import PaginatedIterator
 
 try:
     from unittest.mock import patch

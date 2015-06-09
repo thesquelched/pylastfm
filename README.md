@@ -19,7 +19,7 @@ Examples
 ========
 
 ```python
->>> from lastfm import LastFM
+>>> from pylastfm import LastFM
 
 >>> # Current, only password authentication is supported
 >>> client = LastFM('api_key', 'api_secret', username='username', password='password')
@@ -30,7 +30,7 @@ Examples
 
 >>> track = next(tracks)
 >>> track
-<lastfm.response.common.Track at 0x102458a50>
+<pylastfm.response.common.Track at 0x102458a50>
 
 >>> '{0} - {1}'.format(track.artist_name, track.name)
 'Low - On My Own'

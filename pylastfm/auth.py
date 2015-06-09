@@ -1,4 +1,4 @@
-from lastfm.error import AuthenticationError
+from pylastfm.error import AuthenticationError
 
 from collections import defaultdict
 import six

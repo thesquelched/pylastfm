@@ -2,7 +2,7 @@ import six
 from figgis import Config, Field
 from dateutil.parser import parse as dateparse
 
-from lastfm.util import ceildiv
+from pylastfm.util import ceildiv
 
 
 def integer(value):

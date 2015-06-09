@@ -1,8 +1,8 @@
 import pytest
 import six
 
-from lastfm.response import common
-from lastfm.util import PaginatedIterator
+from pylastfm.response import common
+from pylastfm.util import PaginatedIterator
 
 
 @pytest.mark.live

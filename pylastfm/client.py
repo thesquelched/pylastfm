@@ -5,11 +5,11 @@ from itertools import chain
 from requests.adapters import HTTPAdapter
 from six.moves.configparser import SafeConfigParser
 
-from lastfm.response.common import PaginateMixin
-from lastfm import auth, constants, error
-from lastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
-                         nested_set, ceildiv)
-from lastfm.api import user, track, auth as apiauth
+from pylastfm.response.common import PaginateMixin
+from pylastfm import auth, constants, error
+from pylastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
+                           nested_set, ceildiv)
+from pylastfm.api import user, track, auth as apiauth
 
 
 def prefixed(prfx, *methods):

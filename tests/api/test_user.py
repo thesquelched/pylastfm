@@ -1,7 +1,7 @@
 import pytest
 
-from lastfm.response.common import ArtistTrack, Track, RecentTrack
-from lastfm.util import PaginatedIterator
+from pylastfm.response.common import ArtistTrack, Track, RecentTrack
+from pylastfm.util import PaginatedIterator
 
 
 @pytest.mark.live

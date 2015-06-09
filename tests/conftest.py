@@ -1,6 +1,6 @@
 import pytest
 import logging
-from lastfm import LastFM
+from pylastfm import LastFM
 from six.moves.configparser import SafeConfigParser
 
 
