@@ -9,7 +9,7 @@ from lastfm.response.common import PaginateMixin
 from lastfm import auth, constants, error
 from lastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
                          nested_set, ceildiv)
-from lastfm.api import user, track
+from lastfm.api import user, track, auth as apiauth
 
 
 def prefixed(prfx, *methods):
@@ -17,12 +17,12 @@ def prefixed(prfx, *methods):
     return ['{0}.{1}'.format(prfx, method) for method in methods]
 
 
-AUTHENTICATED_METHODS = frozenset(
+AUTHENTICATED_METHODS = frozenset(chain(
     prefixed('user',
              'getRecentStations',
              'getRecommendedArtists',
              'getRecommendedEvents',
-             'shout') +
+             'shout'),
     prefixed('track',
              'addTags',
              'ban',
@@ -32,8 +32,8 @@ AUTHENTICATED_METHODS = frozenset(
              'share',
              'unban',
              'unlove',
-             'updateNowPlaying')
-)
+             'updateNowPlaying'),
+))
 
 
 ERROR = 'error'
@@ -134,6 +134,7 @@ class LastFM(object):
         # Exposed API objects
         self.user = user.User(self)
         self.track = track.Track(self)
+        self.auth = apiauth.Auth(self)
 
     @classmethod
     def _getoption(cls, config, params, key):
