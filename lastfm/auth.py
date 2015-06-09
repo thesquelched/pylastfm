@@ -32,7 +32,7 @@ class Authenticator(object):
     def sign(self, **params):
         return self._signer(**params)
 
-    def session(self):
+    def session_key(self):
         raise NotImplementedError
 
 
