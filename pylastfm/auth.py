@@ -1,4 +1,4 @@
-from pylastfm.error import AuthenticationError, LastfmError
+from pylastfm.error import AuthenticationError, FileError
 
 import six
 import hashlib
@@ -154,9 +154,8 @@ class SessionKeyFile(Authenticator):
             with open(self._session_key) as handle:
                 return handle.read().strip()
         except IOError:
-            raise LastfmError(
-                'Invalid/missing session key file: {0}'.format(
-                    self._session_key))
+            raise FileError('Invalid/missing session key file: {0}'.format(
+                self._session_key))
 
 
 AUTH_METHODS = dict(
