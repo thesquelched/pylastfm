@@ -1,6 +1,5 @@
-from pylastfm.error import AuthenticationError
+from pylastfm.error import AuthenticationError, LastfmError
 
-from collections import defaultdict
 import six
 import hashlib
 import logging
@@ -13,9 +12,13 @@ LOGGER = logging.getLogger('lastfm')
 class Authenticator(object):
     """Base class for LastFM authenticators"""
 
-    def __init__(self, signer, api_info):
+    def __init__(self, signer, api_info, username=None, password=None,
+                 session_key=None):
         self._signer = signer
         self._api_info = api_info
+        self._username = username
+        self._password = password
+        self._session_key = session_key
 
     @property
     def url(self):
@@ -42,17 +45,10 @@ class PasswordAuthToken(Authenticator):
     HASH_UPPER = frozenset('ABCDEFG0123456789')
     HASH_LENGTH = 32
 
-    def __init__(self,
-                 signer,
-                 api_info,
-                 username,
-                 password,
-                 hashed=None):
-        super(PasswordAuthToken, self).__init__(signer, api_info)
+    def __init__(self, *args, **kwargs):
+        self._hashed = kwargs.pop('hashed', None)
 
-        self._username = username
-        self._password = password
-        self._hashed = hashed
+        super(PasswordAuthToken, self).__init__(*args, **kwargs)
 
     def session_key(self):
         """Get a LastFM session key"""
@@ -120,16 +116,6 @@ class PasswordAuthToken(Authenticator):
 
 class Password(Authenticator):
 
-    def __init__(self,
-                 signer,
-                 api_info,
-                 username,
-                 password):
-        super(Password, self).__init__(signer, api_info)
-
-        self._username = username
-        self._password = password
-
     def session_key(self):
         postdata = self.sign(
             method='auth.getMobileSession',
@@ -155,8 +141,27 @@ class Password(Authenticator):
         return resp.json()['session']['key']
 
 
-AUTH_METHODS = defaultdict(lambda: Password)
-AUTH_METHODS.update(
+class SessionKey(Authenticator):
+
+    def session_key(self):
+        return self._session_key
+
+
+class SessionKeyFile(Authenticator):
+
+    def session_key(self):
+        try:
+            with open(self._session_key) as handle:
+                return handle.read().strip()
+        except IOError:
+            raise LastfmError(
+                'Invalid/missing session key file: {0}'.format(
+                    self._session_key))
+
+
+AUTH_METHODS = dict(
     password=Password,
     hashed_password=PasswordAuthToken,
+    session_key=SessionKey,
+    session_key_file=SessionKeyFile,
 )

@@ -112,20 +112,29 @@ class LastFM(object):
             (password authentication) or hashed (hashed_password
             authentication)
         :param url: URL for the LastFM API
-        :param auth_method: Authentication method; can be 'password' (default)
-            or 'hashed_password'
+        :param session_key: Plaintext session key or path to session key file
+            (only relevant for 'session_key' or 'session_key_file'
+            authentication)
+        :param auth_method: Authentication method; can be 'password',
+            'hashed_password', 'session_key', or 'session_key_file'. If not
+            specified, the client will attempt to determine the correct method
+            from the parameters given.
         """
         self._username = username
         self._api_info = api_info = ApiInfo(
             api_key,
             api_secret,
-            url=url or constants.DEFAULT_URL,
-            session_key=session_key)
+            url=url or constants.DEFAULT_URL)
 
         self._signer = signer = Signer(self)
 
-        auth_class = auth.AUTH_METHODS[auth_method]
-        self._auth = auth_class(signer, api_info, username, password)
+        if auth_method:
+            auth_class = auth.AUTH_METHODS[auth_method]
+        else:
+            auth_class = self._get_auth_class(session_key)
+
+        self._auth = auth_class(signer, api_info, username=username,
+                                password=password, session_key=session_key)
 
         # Fix SSL issues for LastFM API
         self._session = requests.Session()
@@ -135,6 +144,15 @@ class LastFM(object):
         self.user = user.User(self)
         self.track = track.Track(self)
         self.auth = apiauth.Auth(self)
+
+    def _get_auth_class(self, session_key):
+        if not session_key:
+            return auth.AUTH_METHODS['password']
+
+        if os.path.isfile(session_key):
+            return auth.AUTH_METHODS['session_key_file']
+        else:
+            return auth.AUTH_METHODS['session_key']
 
     @classmethod
     def _getoption(cls, config, params, key):
