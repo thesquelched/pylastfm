@@ -3,7 +3,7 @@ import six
 import requests
 from itertools import chain
 from requests.adapters import HTTPAdapter
-from six.moves.configparser import SafeConfigParser
+from six.moves.configparser import SafeConfigParser, NoOptionError
 
 from pylastfm.response.common import PaginateMixin
 from pylastfm import auth, constants, error
@@ -15,6 +15,9 @@ from pylastfm.api import user, track, auth as apiauth
 def prefixed(prfx, *methods):
     """Return reach method prefixed by the given prefix"""
     return ['{0}.{1}'.format(prfx, method) for method in methods]
+
+
+NOT_SPECIFIED = object()
 
 
 AUTHENTICATED_METHODS = frozenset(chain(
@@ -155,11 +158,17 @@ class LastFM(object):
             return auth.AUTH_METHODS['session_key']
 
     @classmethod
-    def _getoption(cls, config, params, key):
+    def _getoption(cls, config, params, key, default=NOT_SPECIFIED):
         if key in params:
             value = params[key]
         else:
-            value = config.get('lastfm', key)
+            try:
+                value = config.get('lastfm', key)
+            except NoOptionError:
+                if default is NOT_SPECIFIED:
+                    raise
+
+                return default
 
         return value.strip()
 
@@ -181,17 +190,16 @@ class LastFM(object):
         """
         config = SafeConfigParser()
         config.add_section('lastfm')
-        for option in ('api_key', 'api_secret', 'username', 'password'):
-            config.set('lastfm', option, '')
-
         config.read(os.path.expanduser(os.path.expandvars(path)))
 
         return LastFM(
             cls._getoption(config, kwargs, 'api_key'),
             cls._getoption(config, kwargs, 'api_secret'),
-            username=cls._getoption(config, kwargs, 'username'),
-            password=cls._getoption(config, kwargs, 'password'),
-            auth_method=cls._getoption(config, kwargs, 'auth_method'),
+            username=cls._getoption(config, kwargs, 'username', None),
+            password=cls._getoption(config, kwargs, 'password', None),
+            auth_method=cls._getoption(config, kwargs, 'auth_method', None),
+            session_key=cls._getoption(config, kwargs, 'session_key', None),
+            url=cls._getoption(config, kwargs, 'url', None),
         )
 
     @property
