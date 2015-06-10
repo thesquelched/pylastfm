@@ -3,6 +3,8 @@ Python LastFM bindings
 """
 
 from .client import LastFM
+from .error import LastfmError, AuthenticationError, APIError, FileError
 
 
-__all__ = ['LastFM']
+__all__ = ['LastFM', 'LastfmError', 'AuthenticationError', 'APIError',
+           'FileError']
