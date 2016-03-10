@@ -6,24 +6,9 @@ from pylastfm.util import PaginatedIterator
 
 
 @pytest.mark.live
-def test_get_buy_links(client):
-    resp = client.track.get_buy_links('Radiohead', 'Creep', 'USA')
-    assert resp
-    assert 'physicals' in resp
-    assert 'downloads' in resp
-
-
-@pytest.mark.live
 def test_get_correction(client):
     resp = client.track.get_correction('guns and roses', 'Mrbrownstone')
     assert isinstance(resp, common.CorrectedTrack)
-
-
-@pytest.mark.live
-def test_get_fingerprint_metadata(client):
-    resp = client.track.get_fingerprint_metadata('1234')
-    assert resp
-    assert all(isinstance(item, common.Track) for item in resp)
 
 
 @pytest.mark.live
@@ -31,16 +16,6 @@ def test_get_info(client):
     resp = client.track.get_info('cher', 'believe')
     assert resp
     assert isinstance(resp, common.TrackInfo)
-
-
-@pytest.mark.live
-def test_get_shouts(client):
-    resp = client.track.get_shouts('cher', 'believe')
-    assert isinstance(resp, PaginatedIterator)
-
-    shout = six.next(resp)
-    assert shout
-    assert 'body' in shout
 
 
 @pytest.mark.live
@@ -59,14 +34,6 @@ def test_get_tags(client):
 
     track = resp[0]
     assert isinstance(track, common.Tag)
-
-
-@pytest.mark.live
-def test_get_top_fans(client):
-    resp = client.track.get_top_fans('cher', 'believe')
-    assert resp
-
-    assert 'name' in resp[0]
 
 
 @pytest.mark.live
