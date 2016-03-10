@@ -20,6 +20,7 @@
     - `user.get_recommended_events`
     - `user.get_shouts`
     - `user.shout`
+- Add artist API resource
 
 0.1.1
 -----
