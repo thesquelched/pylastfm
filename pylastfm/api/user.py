@@ -27,35 +27,6 @@ class User(API):
         )
         return self.model_iterator(ArtistTrack, resp['track'])
 
-    def get_banned_tracks(self, user):
-        """
-        Get tracks banned by the user.
-
-        http://www.last.fm/api/show/user.getBannedTracks
-        """
-        resp = self._client._paginate_request(
-            'GET',
-            'user.getBannedTracks',
-            'track',
-            unwrap='bannedtracks',
-            params=dict(user=user),
-        )
-        return self.model_iterator(Track, resp['track'])
-
-    def get_events(self, user, festivals_only=False):
-        """
-        Get a list of upcoming events that this user is attending.
-
-        http://www.last.fm/api/show/user.getEvents
-        """
-        return self._client._paginate_request(
-            'GET',
-            'user.getEvents',
-            'event',
-            unwrap='events',
-            params=dict(user=user, festivalsonly=int(festivals_only)),
-        )['event']
-
     def get_friends(self, user, recent_tracks=False):
         """
         Get a list of the user's friends on Last.fm.
@@ -98,48 +69,6 @@ class User(API):
         )
         return self.model_iterator(Track, resp['track'])
 
-    def get_neighbors(self, user):
-        """
-        Get a list of a user's neighbours on Last.fm.
-
-        http://www.last.fm/api/show/user.getNeighbours
-        """
-        return self._client._request(
-            'GET',
-            'user.getNeighbours',
-            unwrap='neighbours',
-            params=dict(user=user),
-        )['user']
-
-    get_neighbours = get_neighbors
-
-    def get_new_releases(self, user, recommendations=False):
-        """
-        Gets a list of forthcoming releases based on a user's musical taste.
-
-        http://www.last.fm/api/show/user.getNewReleases
-        """
-        return self._client._request(
-            'GET',
-            'user.getNewReleases',
-            unwrap='albums',
-            params=dict(user=user, userrecs=int(recommendations)),
-        )['album']
-
-    def get_past_events(self, user):
-        """
-        Get a paginated list of all events a user has attended in the past.
-
-        http://www.last.fm/api/show/user.getPastEvents
-        """
-        return self._client._paginate_request(
-            'GET',
-            'user.getPastEvents',
-            'event',
-            unwrap='events',
-            params=dict(user=user),
-        )['event']
-
     def get_personal_tags(self, user, tag, tag_type):
         """
         Get the user's personal tags. Tag type must be either 'artist',
@@ -159,33 +88,6 @@ class User(API):
             params=dict(user=user, tag=tag, taggingtype=tag_type),
         )[coll_name]
 
-    def get_playlists(self, user):
-        """
-        Get a list of a user's playlists on Last.fm.
-
-        http://www.last.fm/api/show/user.getPlaylists
-        """
-        return self._client._request(
-            'GET',
-            'user.getPlaylists',
-            unwrap='playlists',
-            params=dict(user=user),
-        )['playlist']
-
-    def get_recent_stations(self, user):
-        """
-        Get a list of the recent Stations listened to by this user.
-
-        http://www.last.fm/api/show/user.getRecentStations
-        """
-        return self._client._paginate_request(
-            'GET',
-            'user.getRecentStations',
-            'station',
-            unwrap='recentstations',
-            params=dict(user=user),
-        )['station']
-
     def get_recent_tracks(self, user, start=None, end=None):
         """
         Get tracks recently played by the user. Always returns extended data.
@@ -203,57 +105,6 @@ class User(API):
                     'extended': 1},
         )
         return self.model_iterator(RecentTrack, resp['track'])
-
-    def get_recommended_artists(self, user):
-        """
-        Get Last.fm artist recommendations for a user.
-
-        http://www.last.fm/api/show/user.getRecommendedArtists
-        """
-        return self._client._paginate_request(
-            'GET',
-            'user.getRecommendedArtists',
-            'artist',
-            unwrap='recommendations',
-            params=dict(user=user),
-        )['artist']
-
-    def get_recommended_events(self, user, latitude=None, longitude=None,
-                               festivals_only=False, country=None):
-        """
-        Get a paginated list of all events recommended to a user by Last.fm,
-        based on their listening profile.
-
-        http://www.last.fm/api/show/user.getRecommendedEvents
-        """
-        if (longitude is None and latitude is not None or
-                longitude is not None and latitude is None):
-            raise ValueError('Latitude must be paired with longitude')
-        return self._client._paginate_request(
-            'GET',
-            'user.getRecommendedEvents',
-            'event',
-            unwrap='events',
-            params=dict(user=user,
-                        latitude=latitude,
-                        longitude=longitude,
-                        festivalsonly=int(festivals_only),
-                        country=country),
-        )['event']
-
-    def get_shouts(self, user):
-        """
-        Get shouts for this user. Also available as an rss feed.
-
-        http://www.last.fm/api/show/user.getShouts
-        """
-        return self._client._paginate_request(
-            'GET',
-            'user.getShouts',
-            'shout',
-            unwrap='shouts',
-            params=dict(user=user),
-        )['shout']
 
     def get_top_albums(self, user, period=None):
         """
@@ -389,15 +240,3 @@ class User(API):
                     'from': query_date(start),
                     'to': query_date(end)},
         )['track']
-
-    def shout(self, user, message):
-        """
-        Shout on this user's shoutbox
-
-        http://www.last.fm/api/show/user.shout
-        """
-        self._client._request(
-            'POST',
-            'user.shout',
-            data=dict(user=user, message=message)
-        )

@@ -21,19 +21,11 @@ NOT_SPECIFIED = object()
 
 
 AUTHENTICATED_METHODS = frozenset(chain(
-    prefixed('user',
-             'getRecentStations',
-             'getRecommendedArtists',
-             'getRecommendedEvents',
-             'shout'),
     prefixed('track',
              'addTags',
-             'ban',
              'love',
              'removeTag',
              'scrobble',
-             'share',
-             'unban',
              'unlove',
              'updateNowPlaying'),
 ))
@@ -270,7 +262,7 @@ class LastFM(object):
             resp.raise_for_status()
         except requests.exceptions.HTTPError as exc:
             six.raise_from(
-                error.ApiError(exc.response.status_code, exc.response.reason),
+                error.APIError(exc.response.status_code, exc.response.reason),
                 exc)
         except requests.exceptions.RequestException as exc:
             newexc = error.LastfmError('Request error: {0}'.format(exc))

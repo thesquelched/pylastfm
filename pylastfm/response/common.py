@@ -105,7 +105,7 @@ class _TrackBase(Config):
 
     name = Field(six.text_type, required=True)
     url = Field(six.text_type, required=True)
-    mbid = Field(six.text_type, required=True)
+    mbid = Field(six.text_type)
     date = Field(extract('#text', coerce=dateparse))
     images = Field(images, default=[], key='image')
 
@@ -189,7 +189,6 @@ class TrackInfo(ApiConfig):
     streamable = Field(bool_from_int, required=True)
 
     duration = Field(int, required=True)
-    id = Field(int, required=True)
     listeners = Field(int, required=True)
     playcount = Field(int, required=True)
     toptags = Field(lambda value: [Tag(tag) for tag in value['tag']],

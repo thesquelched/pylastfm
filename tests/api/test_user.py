@@ -11,12 +11,6 @@ def test_artist_tracks(client):
 
 
 @pytest.mark.live
-def test_banned_tracks(client):
-    track = next(client.user.get_banned_tracks('rj'))
-    assert isinstance(track, Track)
-
-
-@pytest.mark.live
 def test_loved_tracks(client):
     track = next(client.user.get_loved_tracks('rj'))
     assert isinstance(track, Track)
@@ -26,13 +20,6 @@ def test_loved_tracks(client):
 def test_recent_tracks(client):
     track = next(client.user.get_recent_tracks('rj'))
     assert isinstance(track, RecentTrack)
-
-
-@pytest.mark.live
-def test_get_events(client):
-    assert isinstance(client.user.get_events('rj'), PaginatedIterator)
-    assert isinstance(client.user.get_events('rj', festivals_only=True),
-                      PaginatedIterator)
 
 
 @pytest.mark.live
@@ -48,11 +35,6 @@ def test_get_info(client):
     assert resp
     assert 'name' in resp
     assert resp['name'] == 'RJ'
-
-
-@pytest.mark.live
-def test_get_neighbors(client):
-    assert isinstance(client.user.get_neighbors('rj'), list)
 
 
 @pytest.mark.live
@@ -75,47 +57,6 @@ def test_get_personal_tags(client):
                       PaginatedIterator)
     assert isinstance(client.user.get_personal_tags('rj', 'rock', 'track'),
                       PaginatedIterator)
-
-
-@pytest.mark.live
-def test_get_playlists(client):
-    assert isinstance(client.user.get_playlists('rj'), list)
-
-
-@pytest.mark.live
-def test_get_recent_stations(client):
-    assert isinstance(client.user.get_recent_stations('rj'),
-                      PaginatedIterator)
-
-
-@pytest.mark.live
-def test_get_recommended_artists(client):
-    assert isinstance(client.user.get_recommended_artists('rj'),
-                      PaginatedIterator)
-
-
-@pytest.mark.live
-def test_get_recommended_events(client):
-    pytest.raises(ValueError, client.user.get_recommended_events, 'rj',
-                  latitude=0.0)
-    pytest.raises(ValueError, client.user.get_recommended_events, 'rj',
-                  longitude=0.0)
-
-    assert isinstance(client.user.get_recommended_events('rj'),
-                      PaginatedIterator)
-    assert isinstance(
-        client.user.get_recommended_events('rj', longitude=0.0, latitude=0.0),
-        PaginatedIterator)
-    assert isinstance(
-        client.user.get_recommended_events('rj', festivals_only=True),
-        PaginatedIterator)
-    assert isinstance(client.user.get_recommended_events('rj', country='USA'),
-                      PaginatedIterator)
-
-
-@pytest.mark.live
-def test_get_shouts(client):
-    assert isinstance(client.user.get_shouts('rj'), PaginatedIterator)
 
 
 @pytest.mark.live
