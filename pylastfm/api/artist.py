@@ -4,7 +4,7 @@ from pylastfm.response import common
 from pylastfm.api.api import API
 
 
-class Artist(API):
+class Resource(API):
 
     def add_tags(self, artist, *tags):
         """

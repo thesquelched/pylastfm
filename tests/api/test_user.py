@@ -1,6 +1,8 @@
+import six
 import pytest
 
 from pylastfm.response.common import ArtistTrack, Track, RecentTrack
+from pylastfm.response.user import User
 from pylastfm.util import PaginatedIterator
 
 
@@ -23,10 +25,11 @@ def test_recent_tracks(client):
 
 
 @pytest.mark.live
-def test_get_friends(client):
-    assert isinstance(client.user.get_friends('rj'), PaginatedIterator)
-    assert isinstance(client.user.get_friends('rj', recent_tracks=True),
-                      PaginatedIterator)
+@pytest.mark.parametrize('recent_track', [False, True])
+def test_get_friends(client, recent_track):
+    resp = client.user.get_friends('rj', recent_track=recent_track)
+    assert isinstance(resp, PaginatedIterator)
+    assert isinstance(six.next(resp), User)
 
 
 @pytest.mark.live
@@ -50,12 +53,20 @@ def get_past_events(client):
 
 
 @pytest.mark.live
-def test_get_personal_tags(client):
-    assert isinstance(client.user.get_personal_tags('rj', 'rock', 'album'),
+def test_get_artist_tags(client):
+    assert isinstance(client.user.get_artist_tags('rj', 'rock'),
                       PaginatedIterator)
-    assert isinstance(client.user.get_personal_tags('rj', 'rock', 'artist'),
+
+
+@pytest.mark.live
+def test_get_album_tags(client):
+    assert isinstance(client.user.get_album_tags('rj', 'rock'),
                       PaginatedIterator)
-    assert isinstance(client.user.get_personal_tags('rj', 'rock', 'track'),
+
+
+@pytest.mark.live
+def test_get_track_tags(client):
+    assert isinstance(client.user.get_track_tags('rj', 'rock'),
                       PaginatedIterator)
 
 

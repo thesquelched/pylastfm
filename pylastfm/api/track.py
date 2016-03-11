@@ -39,7 +39,7 @@ def _track_arguments(name, args):
     return artist, track, mbid
 
 
-class Track(API):
+class Resource(API):
 
     def add_tags(self, artist, track, tags):
         """

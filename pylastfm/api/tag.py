@@ -2,7 +2,7 @@ from pylastfm.response import common
 from pylastfm.api.api import API
 
 
-class Tag(API):
+class Resource(API):
 
     def get_top_albums(self, tag, limit=None):
         """

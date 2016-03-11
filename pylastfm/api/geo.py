@@ -3,7 +3,7 @@ from pylastfm.api.api import API
 from iso3166 import countries
 
 
-class Geo(API):
+class Resource(API):
 
     def get_top_artists(self, country, limit=None):
         perpage = min(30, limit) if limit else 30

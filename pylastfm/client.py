@@ -140,13 +140,13 @@ class LastFM(object):
         self._session.mount(constants.DEFAULT_URL, HTTPAdapter(max_retries=2))
 
         # Exposed API objects
-        self.artist = artist.Artist(self)
-        self.geo = geo.Geo(self)
-        self.library = library.Library(self)
-        self.user = user.User(self)
-        self.tag = tag.Tag(self)
-        self.track = track.Track(self)
-        self.auth = apiauth.Auth(self)
+        self.artist = artist.Resource(self)
+        self.geo = geo.Resource(self)
+        self.library = library.Resource(self)
+        self.user = user.Resource(self)
+        self.tag = tag.Resource(self)
+        self.track = track.Resource(self)
+        self.auth = apiauth.Resource(self)
 
     def _get_auth_class(self, session_key):
         if not session_key:
