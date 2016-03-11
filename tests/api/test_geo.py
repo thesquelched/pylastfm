@@ -1,7 +1,7 @@
 import six
 import pytest
 
-from pylastfm.response import common
+from pylastfm.response import geo
 from pylastfm.util import PaginatedIterator
 
 
@@ -13,7 +13,7 @@ def test_get_top_artists(client, limit_one):
     assert isinstance(resp, PaginatedIterator)
 
     album = six.next(resp)
-    assert isinstance(album, common.GeoArtist)
+    assert isinstance(album, geo.Artist)
 
     if limit_one:
         pytest.raises(StopIteration, six.next, resp)
@@ -27,7 +27,7 @@ def test_get_top_tracks(client, limit_one):
     assert isinstance(resp, PaginatedIterator)
 
     album = six.next(resp)
-    assert isinstance(album, common.GeoTrack)
+    assert isinstance(album, geo.Track)
 
     if limit_one:
         pytest.raises(StopIteration, six.next, resp)

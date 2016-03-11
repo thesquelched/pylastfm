@@ -159,78 +159,11 @@ class TagTrack(ApiConfig):
     artist_url = Field(extract('url', coerce=string_or_null), key='artist')
 
 
-class GeoTrack(ApiConfig):
-
-    __inherits__ = [TagTrack]
-
-    listeners = Field(int, required=True)
-
-
-class ArtistTrack(ApiConfig):
-
-    __inherits__ = [_TrackBase]
-
-    streamable = Field(bool_from_int, required=True)
-
-    album_name = Field(extract('#text'), key='album', required=True)
-    album_mbid = Field(extract('mbid', coerce=string_or_null), key='album',
-                       required=True)
-
-    artist_name = Field(extract('#text'), key='artist', required=True)
-    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                        required=True)
-    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
-
-
 class Track(ApiConfig):
 
     __inherits__ = [_TrackBase]
 
     streamable = Field(extract('#text', coerce=bool_from_int), required=True)
-
-    artist_name = Field(extract('name'), key='artist', required=True)
-    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                        required=True)
-    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
-
-
-class RecentTrack(ApiConfig):
-
-    __inherits__ = [_TrackBase]
-
-    streamable = Field(bool_from_int, required=True)
-
-    album_name = Field(extract('#text'), key='album', required=True)
-    album_mbid = Field(extract('mbid', coerce=string_or_null), key='album',
-                       required=True)
-
-    artist_name = Field(extract('name'), key='artist', required=True)
-    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                        required=True)
-    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
-    artist_images = Field(extract('image', coerce=images), default=[],
-                          key='artist')
-
-    loved = Field(bool_from_int, required=True)
-
-
-class CorrectedTrack(ApiConfig):
-
-    __inherits__ = [_TrackBase]
-
-    artist_name = Field(extract('name'), key='artist', required=True)
-    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                        required=True)
-    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
-
-
-class TopTrack(ApiConfig):
-
-    __inherits__ = [_TrackBase]
-
-    rank = Field(extract('rank', coerce=int), key='@attr')
-    streamable = Field(bool_from_int, required=True)
-    listeners = Field(int, required=True)
 
     artist_name = Field(extract('name'), key='artist', required=True)
     artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
@@ -264,51 +197,7 @@ class Wiki(ApiConfig):
 
     content = Field(six.text_type, required=True)
     summary = Field(six.text_type, required=True)
-    published = Field(six.text_type, required=True)
     published = Field(dateparse, required=True)
-
-
-class TrackInfo(ApiConfig):
-
-    __inherits__ = [_TrackBase]
-
-    streamable = Field(bool_from_int, required=True)
-
-    duration = Field(int, required=True)
-    listeners = Field(int, required=True)
-    playcount = Field(int, required=True)
-    toptags = Field(lambda value: [Tag(tag) for tag in value['tag']],
-                    required=True)
-    wiki = Field(Wiki, required=True)
-
-    album_name = Field(extract('title'), key='album', required=True)
-    album_mbid = Field(extract('mbid', coerce=string_or_null), key='album',
-                       required=True)
-    album_url = Field(extract('url', coerce=string_or_null), key='album')
-    album_images = Field(extract('image', coerce=images), default=[],
-                         key='album')
-
-    artist_name = Field(extract('name'), key='artist', required=True)
-    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                        required=True)
-    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
-
-
-class SearchTrack(ApiConfig):
-
-    __inherits__ = [_TrackBase]
-
-    artist_name = Field(six.text_type, key='artist', required=True)
-    listeners = Field(int, required=True)
-    streamable = Field(bool_from_int, required=True)
-
-
-class CorrectedArtist(ApiConfig):
-
-    name = Field(extract('name'), key='artist', required=True)
-    mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                 required=True)
-    url = Field(extract('url', coerce=string_or_null), key='artist')
 
 
 class _ArtistBase(Config):
@@ -320,23 +209,16 @@ class _ArtistBase(Config):
     images = Field(images, default=[], key='image')
 
 
-class GeoArtist(ApiConfig):
-
-    __inherits__ = [_ArtistBase]
-
-    listeners = Field(int, required=True)
-
-
-class SimilarArtist(ApiConfig):
-
-    __inherits__ = [_ArtistBase]
-
-
 class TagArtist(ApiConfig):
 
     __inherits__ = [_ArtistBase]
 
     rank = Field(extract('rank', coerce=int), key='@attr')
+
+
+class SimilarArtist(ApiConfig):
+
+    __inherits__ = [_ArtistBase]
 
 
 class Artist(ApiConfig):
@@ -354,21 +236,6 @@ class Artist(ApiConfig):
     similar = Field(
         lambda value: [SimilarArtist(item) for item in value['artist']],
         required=True)
-
-
-class SearchArtist(ApiConfig):
-
-    __inherits__ = [_ArtistBase]
-
-    listeners = Field(int, required=True)
-
-
-class LibraryArtist(ApiConfig):
-
-    __inherits__ = [_ArtistBase]
-
-    playcount = Field(int, required=True)
-    tagcount = Field(int, required=True)
 
 
 class _AlbumBase(Config):

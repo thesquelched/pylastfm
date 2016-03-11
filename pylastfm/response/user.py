@@ -3,7 +3,7 @@ import six
 from figgis import Field
 from pylastfm.response.common import (ApiConfig, dateparse, extract,
                                       string_or_null, _TrackBase,
-                                      _ArtistBase)
+                                      _ArtistBase, bool_from_int, images)
 
 
 class Track(ApiConfig):
@@ -96,3 +96,39 @@ class ChartTrack(ApiConfig):
     artist_name = Field(extract('#text'), key='artist', required=True)
     artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
                         required=True)
+
+
+class RecentTrack(ApiConfig):
+
+    __inherits__ = [_TrackBase]
+
+    streamable = Field(bool_from_int, required=True)
+
+    album_name = Field(extract('#text'), key='album', required=True)
+    album_mbid = Field(extract('mbid', coerce=string_or_null), key='album',
+                       required=True)
+
+    artist_name = Field(extract('name'), key='artist', required=True)
+    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
+                        required=True)
+    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
+    artist_images = Field(extract('image', coerce=images), default=[],
+                          key='artist')
+
+    loved = Field(bool_from_int, required=True)
+
+
+class ArtistTrack(ApiConfig):
+
+    __inherits__ = [_TrackBase]
+
+    streamable = Field(bool_from_int, required=True)
+
+    album_name = Field(extract('#text'), key='album', required=True)
+    album_mbid = Field(extract('mbid', coerce=string_or_null), key='album',
+                       required=True)
+
+    artist_name = Field(extract('#text'), key='artist', required=True)
+    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
+                        required=True)
+    artist_url = Field(extract('url', coerce=string_or_null), key='artist')

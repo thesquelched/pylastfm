@@ -1,27 +1,26 @@
 import six
 import pytest
 
-from pylastfm.response.common import ArtistTrack, Track, RecentTrack
-from pylastfm.response.user import User
+from pylastfm.response import common, user as response
 from pylastfm.util import PaginatedIterator
 
 
 @pytest.mark.live
 def test_artist_tracks(client):
     track = next(client.user.get_artist_tracks('rj', 'metallica'))
-    assert isinstance(track, ArtistTrack)
+    assert isinstance(track, response.ArtistTrack)
 
 
 @pytest.mark.live
 def test_loved_tracks(client):
     track = next(client.user.get_loved_tracks('rj'))
-    assert isinstance(track, Track)
+    assert isinstance(track, common.Track)
 
 
 @pytest.mark.live
 def test_recent_tracks(client):
     track = next(client.user.get_recent_tracks('rj'))
-    assert isinstance(track, RecentTrack)
+    assert isinstance(track, response.RecentTrack)
 
 
 @pytest.mark.live
@@ -29,7 +28,7 @@ def test_recent_tracks(client):
 def test_get_friends(client, recent_track):
     resp = client.user.get_friends('rj', recent_track=recent_track)
     assert isinstance(resp, PaginatedIterator)
-    assert isinstance(six.next(resp), User)
+    assert isinstance(six.next(resp), response.User)
 
 
 @pytest.mark.live

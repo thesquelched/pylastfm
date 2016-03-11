@@ -1,8 +1,8 @@
 import six
 from figgis import Field
-from pylastfm.response.common import (ApiConfig, _AlbumBase, dateparse,
-                                      _TrackBase, bool_from_int, extract,
-                                      string_or_null, images, _TagBase)
+from pylastfm.response.common import (ApiConfig, _AlbumBase, _TrackBase,
+                                      bool_from_int, extract, string_or_null,
+                                      images, _TagBase, Wiki)
 
 
 class Track(ApiConfig):
@@ -26,11 +26,7 @@ class AlbumInfo(ApiConfig):
     images = Field(images, default=[], key='image')
     artist_name = Field(six.text_type, key='artist', required=True)
 
-    wiki_content = Field(extract('content'), key='wiki', required=True)
-    wiki_summary = Field(extract('summary'), key='wiki', required=True)
-    wiki_published = Field(extract('published', coerce=dateparse),
-                           key='wiki', required=True)
-
+    wiki = Field(Wiki)
     tracks = Field(lambda value: [Track(item) for item in value['track']])
 
 

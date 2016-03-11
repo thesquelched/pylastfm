@@ -1,6 +1,6 @@
 import six
 
-from pylastfm.response import common
+from pylastfm.response import common, artist as response
 from pylastfm.api.api import API
 
 
@@ -12,7 +12,7 @@ class Resource(API):
 
         http://www.last.fm/api/show/artist.addTags
         """
-        return self._request(
+        self._request(
             'POST',
             'artist.addTags',
             data=dict(
@@ -48,7 +48,7 @@ class Resource(API):
 
             corrections = []
 
-        return [self.model(common.CorrectedArtist, correction)
+        return [self.model(response.CorrectedArtist, correction)
                 for correction in corrections]
 
     def get_info(self, artist=None, mbid=None, lang=None, autocorrect=False,
@@ -192,7 +192,7 @@ class Resource(API):
             perpage=perpage,
         )['track']
 
-        return self.model_iterator(common.TopTrack, resp)
+        return self.model_iterator(response.Track, resp)
 
     def remove_tag(self, artist, tag):
         """
@@ -229,4 +229,4 @@ class Resource(API):
             perpage=perpage,
         )['artistmatches']['artist']
 
-        return self.model_iterator(common.SearchArtist, resp)
+        return self.model_iterator(response.Artist, resp)

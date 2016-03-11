@@ -1,21 +1,21 @@
 import pytest
 import six
 
-from pylastfm.response import common
+from pylastfm.response import common, track as response
 from pylastfm.util import PaginatedIterator
 
 
 @pytest.mark.live
 def test_get_correction(client):
     resp = client.track.get_correction('guns and roses', 'Mrbrownstone')
-    assert isinstance(resp, common.CorrectedTrack)
+    assert isinstance(resp, response.CorrectedTrack)
 
 
 @pytest.mark.live
 def test_get_info(client):
     resp = client.track.get_info('cher', 'believe')
     assert resp
-    assert isinstance(resp, common.TrackInfo)
+    assert isinstance(resp, response.TrackInfo)
 
 
 @pytest.mark.live
@@ -58,7 +58,7 @@ def test_search(artist, limit_to_one, client):
     assert isinstance(resp, PaginatedIterator)
 
     track = six.next(resp)
-    assert isinstance(track, common.SearchTrack)
+    assert isinstance(track, response.SearchTrack)
 
     if limit_to_one:
         pytest.raises(StopIteration, six.next, resp)
