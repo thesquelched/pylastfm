@@ -21,6 +21,7 @@
     - `user.get_shouts`
     - `user.shout`
 - Add album API resource
+- Add chart API resource
 - Add artist API resource
 - Add geo API resource
 - Add library API resource
