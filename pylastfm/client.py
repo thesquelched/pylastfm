@@ -9,8 +9,8 @@ from pylastfm.response.common import PaginateMixin
 from pylastfm import auth, constants, error
 from pylastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
                            nested_set, ceildiv)
-from pylastfm.api import (album, artist, geo, library, tag, track, user,
-                          auth as apiauth)
+from pylastfm.api import (album, artist, chart, geo, library, tag, track,
+                          user, auth as apiauth)
 
 
 def prefixed(prfx, *methods):
@@ -145,6 +145,7 @@ class LastFM(object):
         # Exposed API objects
         self.album = album.Resource(self)
         self.artist = artist.Resource(self)
+        self.chart = chart.Resource(self)
         self.geo = geo.Resource(self)
         self.library = library.Resource(self)
         self.user = user.Resource(self)
