@@ -27,7 +27,7 @@ DESCRIPTION = """\
 pylastfm
 ========
 
-Lasty Last.FM API bindings
+Lazy Last.FM API bindings
 
 .. image:: https://travis-ci.org/thesquelched/pylastfm.svg?branch=master
     :target: https://travis-ci.org/thesquelched/pylastfm
