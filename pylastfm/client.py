@@ -9,7 +9,7 @@ from pylastfm.response.common import PaginateMixin
 from pylastfm import auth, constants, error
 from pylastfm.util import (Signer, PaginatedIterator, nested_get, nested_in,
                            nested_set, ceildiv)
-from pylastfm.api import (artist, geo, library, tag, track, user,
+from pylastfm.api import (album, artist, geo, library, tag, track, user,
                           auth as apiauth)
 
 
@@ -22,6 +22,12 @@ NOT_SPECIFIED = object()
 
 
 AUTHENTICATED_METHODS = frozenset(chain(
+    prefixed('album',
+             'addTags',
+             'removeTag'),
+    prefixed('artist',
+             'addTags',
+             'removeTag'),
     prefixed('track',
              'addTags',
              'love',
@@ -29,9 +35,6 @@ AUTHENTICATED_METHODS = frozenset(chain(
              'scrobble',
              'unlove',
              'updateNowPlaying'),
-    prefixed('artist',
-             'addTags',
-             'removeTag'),
 ))
 
 
@@ -140,6 +143,7 @@ class LastFM(object):
         self._session.mount(constants.DEFAULT_URL, HTTPAdapter(max_retries=2))
 
         # Exposed API objects
+        self.album = album.Resource(self)
         self.artist = artist.Resource(self)
         self.geo = geo.Resource(self)
         self.library = library.Resource(self)

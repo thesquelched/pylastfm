@@ -376,17 +376,16 @@ class _AlbumBase(Config):
     mbid = Field(six.text_type)
     url = Field(six.text_type, required=True)
 
-    artist_name = Field(extract('name'), key='artist', required=True)
-    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
-                        required=True)
-    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
-
 
 class Album(ApiConfig):
 
     __inherits__ = [_AlbumBase]
 
     playcount = Field(int, required=True)
+    artist_name = Field(extract('name'), key='artist', required=True)
+    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
+                        required=True)
+    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
 
 
 class TagAlbum(ApiConfig):
