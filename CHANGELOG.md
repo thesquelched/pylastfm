@@ -20,10 +20,11 @@
     - `user.get_recommended_events`
     - `user.get_shouts`
     - `user.shout`
+- Add album API resource
 - Add artist API resource
+- Add geo API resource
 - Add library API resource
 - Add tag API resource
-- Add geo API resource
 - User resource now parses responses instead of returning raw data
 
 0.1.1
