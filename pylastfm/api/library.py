@@ -1,4 +1,4 @@
-from pylastfm.response import common
+from pylastfm.response import library as response
 from pylastfm.api.api import API
 
 
@@ -25,4 +25,4 @@ class Resource(API):
             limit=limit,
         )['artist']
 
-        return self.model_iterator(common.LibraryArtist, resp)
+        return self.model_iterator(response.Artist, resp)

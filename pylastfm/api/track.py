@@ -1,26 +1,10 @@
 import six
 import itertools
 from types import GeneratorType
-from figgis import Config, Field
 
-from pylastfm.response import common
+from pylastfm.response import common, track as response
 from pylastfm.api.api import API
-from pylastfm.util import keywords, query_date
-
-
-class Scrobble(Config):
-
-    artist = Field(six.text_type, required=True)
-    track = Field(six.text_type, required=True)
-    timestamp = Field(query_date, required=True)
-    mbid = Field(six.text_type)
-    album = Field(six.text_type)
-    context = Field(six.text_type)
-    streamId = Field(six.text_type, key='stream_id')
-    chosenByUser = Field(int, key='chosen_by_user', default=1)
-    trackNumber = Field(int, key='track_number')
-    albumArtist = Field(six.text_type, key='album_artist')
-    duration = Field(int)
+from pylastfm.util import keywords
 
 
 def _track_arguments(name, args):
@@ -49,7 +33,7 @@ class Resource(API):
         http://www.last.fm/api/show/track.addTags
         """
         # TODO: Can you add more than 10 tags?
-        return self._request(
+        self._request(
             'POST',
             'track.addTags',
             data=dict(
@@ -75,7 +59,7 @@ class Resource(API):
             ),
             unwrap='corrections',
         )
-        return self.model(common.CorrectedTrack, resp['correction']['track'])
+        return self.model(response.CorrectedTrack, resp['correction']['track'])
 
     @keywords('username', autocorrect=False)
     def get_info(self, *args, **kwargs):
@@ -101,7 +85,7 @@ class Resource(API):
             ),
             unwrap='track',
         )
-        return self.model(common.TrackInfo, resp)
+        return self.model(response.TrackInfo, resp)
 
     @keywords(autocorrect=False, limit=None)
     def get_similar(self, *args, **kwargs):
@@ -162,8 +146,9 @@ class Resource(API):
                 autocorrect=int(kwargs['autocorrect']),
                 user=kwargs.get('username', self._client.username),
             )
-        )
-        return [self.model(common.Tag, tag) for tag in resp['tag']]
+        )['tag']
+
+        return [self.model(common.Tag, tag) for tag in resp]
 
     @keywords(autocorrect=False)
     def get_top_tags(self, *args, **kwargs):
@@ -200,7 +185,7 @@ class Resource(API):
 
         http://www.last.fm/api/show/track.love
         """
-        return self._request(
+        self._request(
             'POST',
             'track.love',
             data=dict(
@@ -215,7 +200,7 @@ class Resource(API):
 
         http://www.last.fm/api/show/track.removeTag
         """
-        return self._request(
+        self._request(
             'POST',
             'track.remove_tag',
             data=dict(
@@ -227,7 +212,8 @@ class Resource(API):
 
     def _marshal_scrobbles(self, scrobbles):
         """Marshal each scrobble in the correct format for the API"""
-        data = (Scrobble(scrobble).to_dict() for scrobble in scrobbles)
+        data = (response.Scrobble(scrobble).to_dict()
+                for scrobble in scrobbles)
         return dict(itertools.chain.from_iterable(
             [('{0}[{1}]'.format(key, i), value)
              for key, value in scrobble.items()]
@@ -283,7 +269,7 @@ class Resource(API):
             raise TypeError('scrobbles() expected an iterable or keyword '
                             'arguments, but not both')
 
-        return self._request(
+        self._request(
             'POST',
             'track.scrobble',
             data=data,
@@ -313,7 +299,7 @@ class Resource(API):
             )
         )['trackmatches']['track']
 
-        return self.model_iterator(common.SearchTrack, resp)
+        return self.model_iterator(response.SearchTrack, resp)
 
     def unlove(self, artist, track):
         """
@@ -321,7 +307,7 @@ class Resource(API):
 
         http://www.last.fm/api/show/track.unlove
         """
-        return self._request(
+        self._request(
             'POST',
             'track.unlove',
             data=dict(
@@ -337,7 +323,7 @@ class Resource(API):
         """
         artist, track, mbid = _track_arguments('get_info', args)
 
-        return self._request(
+        self._request(
             'POST',
             'track.updateNowPlaying',
             data=dict(

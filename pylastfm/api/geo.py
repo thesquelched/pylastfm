@@ -1,4 +1,4 @@
-from pylastfm.response import common
+from pylastfm.response import geo as response
 from pylastfm.api.api import API
 from iso3166 import countries
 
@@ -20,7 +20,7 @@ class Resource(API):
             unwrap='topartists',
         )['artist']
 
-        return self.model_iterator(common.GeoArtist, resp)
+        return self.model_iterator(response.Artist, resp)
 
     def get_top_tracks(self, country, limit=None):
         perpage = min(30, limit) if limit else 30
@@ -37,4 +37,4 @@ class Resource(API):
             unwrap='tracks',
         )['track']
 
-        return self.model_iterator(common.GeoTrack, resp)
+        return self.model_iterator(response.Track, resp)

@@ -1,7 +1,5 @@
 from pylastfm.api.api import API
-from pylastfm.response import common
-from pylastfm.response.user import (User, Artist, ChartAlbum, ChartArtist,
-                                    ChartItem, ChartTrack)
+from pylastfm.response import common, user as response
 from pylastfm.util import query_date
 
 
@@ -29,7 +27,7 @@ class Resource(API):
             ),
             unwrap='artisttracks',
         )['track']
-        return self.model_iterator(common.ArtistTrack, resp)
+        return self.model_iterator(response.ArtistTrack, resp)
 
     def get_friends(self, username, recent_track=False):
         """
@@ -48,7 +46,7 @@ class Resource(API):
             unwrap='friends',
         )['user']
 
-        return self.model_iterator(User, resp)
+        return self.model_iterator(response.User, resp)
 
     def get_info(self, username=None):
         """
@@ -64,7 +62,7 @@ class Resource(API):
             ),
             unwrap='user',
         )
-        return self.model(User, resp)
+        return self.model(response.User, resp)
 
     def get_loved_tracks(self, username):
         """
@@ -148,7 +146,7 @@ class Resource(API):
             },
             unwrap='recenttracks',
         )['track']
-        return self.model_iterator(common.RecentTrack, resp)
+        return self.model_iterator(response.RecentTrack, resp)
 
     def get_top_albums(self, username=None, period=None, limit=None):
         """
@@ -204,7 +202,7 @@ class Resource(API):
             unwrap='topartists',
         )['artist']
 
-        return self.model_iterator(Artist, resp)
+        return self.model_iterator(response.Artist, resp)
 
     def get_top_tags(self, username=None):
         """
@@ -269,7 +267,7 @@ class Resource(API):
             },
         )['album']
 
-        return [self.model(ChartAlbum, item) for item in resp]
+        return [self.model(response.ChartAlbum, item) for item in resp]
 
     def get_weekly_artist_chart(self, username, start=None, end=None):
         """
@@ -288,7 +286,7 @@ class Resource(API):
                     'to': query_date(end)},
         )['artist']
 
-        return [self.model(ChartArtist, item) for item in resp]
+        return [self.model(response.ChartArtist, item) for item in resp]
 
     def get_weekly_chart_list(self, username):
         """
@@ -304,7 +302,7 @@ class Resource(API):
             params=dict(user=username),
         )['chart']
 
-        return [self.model(ChartItem, item) for item in resp]
+        return [self.model(response.ChartItem, item) for item in resp]
 
     def get_weekly_track_chart(self, username, start=None, end=None):
         """
@@ -325,4 +323,4 @@ class Resource(API):
             unwrap='weeklytrackchart',
         )['track']
 
-        return [self.model(ChartTrack, item) for item in resp]
+        return [self.model(response.ChartTrack, item) for item in resp]

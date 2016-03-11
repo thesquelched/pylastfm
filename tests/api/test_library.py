@@ -1,7 +1,7 @@
 import six
 import pytest
 
-from pylastfm.response import common
+from pylastfm.response import library
 from pylastfm.util import PaginatedIterator
 
 
@@ -13,7 +13,7 @@ def test_get_artists(client, limit_one):
     assert isinstance(resp, PaginatedIterator)
 
     album = six.next(resp)
-    assert isinstance(album, common.LibraryArtist)
+    assert isinstance(album, library.Artist)
 
     if limit_one:
         pytest.raises(StopIteration, six.next, resp)
