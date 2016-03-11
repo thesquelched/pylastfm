@@ -138,6 +138,14 @@ class _TrackBase(Config):
     images = Field(images, default=[], key='image')
 
 
+class TagTrack(ApiConfig):
+
+    __inherits__ = [_TrackBase]
+
+    streamable = Field(bool_from_int, required=True)
+    rank = Field(extract('rank', coerce=int), key='@attr', required=True)
+
+
 class ArtistTrack(ApiConfig):
 
     __inherits__ = [_TrackBase]
@@ -210,10 +218,26 @@ class TopTrack(ApiConfig):
     artist_url = Field(extract('url', coerce=string_or_null), key='artist')
 
 
-class Tag(ApiConfig):
+class _TagBase(Config):
 
     name = Field(six.text_type, required=True)
+
+
+class Tag(ApiConfig):
+
+    __inherits__ = [_TagBase]
+
     url = Field(six.text_type)
+    streamable = Field(bool_from_int)
+
+
+class TopTag(ApiConfig):
+
+    __inherits__ = [_TagBase]
+
+    reach = Field(int, required=True)
+    count = Field(int, required=True)
+    rank = Field(int, required=True)
 
 
 class Wiki(ApiConfig):
@@ -281,6 +305,13 @@ class SimilarArtist(ApiConfig):
     __inherits__ = [_ArtistBase]
 
 
+class TagArtist(ApiConfig):
+
+    __inherits__ = [_ArtistBase]
+
+    rank = Field(extract('rank', coerce=int), key='@attr', required=True)
+
+
 class Artist(ApiConfig):
 
     __inherits__ = [_ArtistBase]
@@ -313,14 +344,27 @@ class LibraryArtist(ApiConfig):
     tagcount = Field(int, required=True)
 
 
-class Album(ApiConfig):
-
+class _AlbumBase(Config):
     name = Field(six.text_type, required=True)
     mbid = Field(six.text_type)
     url = Field(six.text_type, required=True)
-    playcount = Field(int, required=True)
 
     artist_name = Field(extract('name'), key='artist', required=True)
     artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
                         required=True)
     artist_url = Field(extract('url', coerce=string_or_null), key='artist')
+
+
+class Album(ApiConfig):
+
+    __inherits__ = [_AlbumBase]
+
+    playcount = Field(int, required=True)
+
+
+class TagAlbum(ApiConfig):
+
+    __inherits__ = [_AlbumBase]
+
+    images = Field(images, default=[], key='image')
+    rank = Field(extract('rank', coerce=int), key='@attr', required=True)

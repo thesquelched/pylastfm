@@ -22,6 +22,7 @@
     - `user.shout`
 - Add artist API resource
 - Add library API resource
+- Add tag API resource
 
 0.1.1
 -----
