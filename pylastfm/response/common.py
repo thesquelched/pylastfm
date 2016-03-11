@@ -1,8 +1,16 @@
 import six
+from datetime import datetime
 from figgis import Config, Field
-from dateutil.parser import parse as dateparse
+from dateutil.parser import parse as parse_date
 
 from pylastfm.util import ceildiv
+
+
+def dateparse(value):
+    try:
+        return parse_date(str(value))
+    except Exception:
+        return datetime.fromtimestamp(int(value))
 
 
 def integer(value):
@@ -143,7 +151,7 @@ class TagTrack(ApiConfig):
     __inherits__ = [_TrackBase]
 
     streamable = Field(bool_from_int, required=True)
-    rank = Field(extract('rank', coerce=int), key='@attr', required=True)
+    rank = Field(extract('rank', coerce=int), key='@attr')
 
     artist_name = Field(extract('name'), key='artist', required=True)
     artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
@@ -220,7 +228,7 @@ class TopTrack(ApiConfig):
 
     __inherits__ = [_TrackBase]
 
-    rank = Field(extract('rank', coerce=int), key='@attr', required=True)
+    rank = Field(extract('rank', coerce=int), key='@attr')
     streamable = Field(bool_from_int, required=True)
     listeners = Field(int, required=True)
 
@@ -328,7 +336,7 @@ class TagArtist(ApiConfig):
 
     __inherits__ = [_ArtistBase]
 
-    rank = Field(extract('rank', coerce=int), key='@attr', required=True)
+    rank = Field(extract('rank', coerce=int), key='@attr')
 
 
 class Artist(ApiConfig):
@@ -386,4 +394,4 @@ class TagAlbum(ApiConfig):
     __inherits__ = [_AlbumBase]
 
     images = Field(images, default=[], key='image')
-    rank = Field(extract('rank', coerce=int), key='@attr', required=True)
+    rank = Field(extract('rank', coerce=int), key='@attr')

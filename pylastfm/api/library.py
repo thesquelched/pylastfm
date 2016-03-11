@@ -2,7 +2,7 @@ from pylastfm.response import common
 from pylastfm.api.api import API
 
 
-class Library(API):
+class Resource(API):
 
     def get_artists(self, username=None, limit=None):
         """

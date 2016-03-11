@@ -1,7 +1,7 @@
 from pylastfm.api.api import API
 
 
-class Auth(API):
+class Resource(API):
 
     def _sign(self, **params):
         api_info = self._client.api_info

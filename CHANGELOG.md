@@ -24,6 +24,7 @@
 - Add library API resource
 - Add tag API resource
 - Add geo API resource
+- User resource now parses responses instead of returning raw data
 
 0.1.1
 -----

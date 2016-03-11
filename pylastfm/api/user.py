@@ -1,5 +1,7 @@
 from pylastfm.api.api import API
-from pylastfm.response.common import ArtistTrack, Track, RecentTrack
+from pylastfm.response import common
+from pylastfm.response.user import (User, Artist, ChartAlbum, ChartArtist,
+                                    ChartItem, ChartTrack)
 from pylastfm.util import query_date
 
 
@@ -7,9 +9,9 @@ VALID_PERIODS = frozenset(['overall', '7day', '1month', '3month', '6month',
                            '12month'])
 
 
-class User(API):
+class Resource(API):
 
-    def get_artist_tracks(self, user, artist, start=None, end=None):
+    def get_artist_tracks(self, username, artist, start=None, end=None):
         """
         Get artist tracks scrobbled by the user
 
@@ -19,42 +21,52 @@ class User(API):
             'GET',
             'user.getArtistTracks',
             'track',
+            params=dict(
+                user=username,
+                artist=artist,
+                start=query_date(start),
+                end=query_date(end)
+            ),
             unwrap='artisttracks',
-            params=dict(user=user,
-                        artist=artist,
-                        start=query_date(start),
-                        end=query_date(end))
-        )
-        return self.model_iterator(ArtistTrack, resp['track'])
+        )['track']
+        return self.model_iterator(common.ArtistTrack, resp)
 
-    def get_friends(self, user, recent_tracks=False):
+    def get_friends(self, username, recent_track=False):
         """
         Get a list of the user's friends on Last.fm.
 
         http://www.last.fm/api/show/user.getFriends
         """
-        return self._client._paginate_request(
+        resp = self._client._paginate_request(
             'GET',
             'user.getFriends',
             'user',
+            params=dict(
+                user=username,
+                recenttracks=int(recent_track)
+            ),
             unwrap='friends',
-            params=dict(user=user, recenttracks=int(recent_tracks)),
         )['user']
 
-    def get_info(self, user):
+        return self.model_iterator(User, resp)
+
+    def get_info(self, username=None):
         """
         Get information about a user profile.
 
         http://www.last.fm/api/show/user.getInfo
         """
-        return self._client._request(
+        resp = self._client._request(
             'GET',
             'user.getInfo',
+            params=dict(
+                user=username or self._client.username,
+            ),
             unwrap='user',
-            params=dict(user=user),
         )
+        return self.model(User, resp)
 
-    def get_loved_tracks(self, user):
+    def get_loved_tracks(self, username):
         """
         Get tracks loved by the user.
 
@@ -65,11 +77,11 @@ class User(API):
             'user.getLovedTracks',
             'track',
             unwrap='lovedtracks',
-            params=dict(user=user),
+            params=dict(user=username),
         )
-        return self.model_iterator(Track, resp['track'])
+        return self.model_iterator(common.Track, resp['track'])
 
-    def get_personal_tags(self, user, tag, tag_type):
+    def _get_personal_tags(self, username, tag, tag_type):
         """
         Get the user's personal tags. Tag type must be either 'artist',
         'album', or 'track'.
@@ -83,12 +95,42 @@ class User(API):
         return self._client._paginate_request(
             'GET',
             'user.getPersonalTags',
-            coll_name,
+            '{0}.{1}'.format(coll_name, tag_type),
             unwrap='taggings',
-            params=dict(user=user, tag=tag, taggingtype=tag_type),
-        )[coll_name]
+            params=dict(user=username, tag=tag, taggingtype=tag_type),
+        )[coll_name][tag_type]
 
-    def get_recent_tracks(self, user, start=None, end=None):
+    def get_artist_tags(self, username, tag):
+        """
+        Get the user's personal artist tags.
+
+        http://www.last.fm/api/show/user.getPersonalTags
+        """
+        resp = self._get_personal_tags(username, tag, 'artist')
+
+        return self.model_iterator(common.TagArtist, resp)
+
+    def get_album_tags(self, username, tag):
+        """
+        Get the user's personal album tags.
+
+        http://www.last.fm/api/show/user.getPersonalTags
+        """
+        resp = self._get_personal_tags(username, tag, 'album')
+
+        return self.model_iterator(common.TagAlbum, resp)
+
+    def get_track_tags(self, username, tag):
+        """
+        Get the user's personal track tags.
+
+        http://www.last.fm/api/show/user.getPersonalTags
+        """
+        resp = self._get_personal_tags(username, tag, 'track')
+
+        return self.model_iterator(common.TagTrack, resp)
+
+    def get_recent_tracks(self, username, start=None, end=None):
         """
         Get tracks recently played by the user. Always returns extended data.
 
@@ -98,15 +140,17 @@ class User(API):
             'GET',
             'user.getRecentTracks',
             'track',
+            params={
+                'user': username,
+                'from': query_date(start),
+                'to': query_date(end),
+                'extended': 1
+            },
             unwrap='recenttracks',
-            params={'user': user,
-                    'from': query_date(start),
-                    'to': query_date(end),
-                    'extended': 1},
-        )
-        return self.model_iterator(RecentTrack, resp['track'])
+        )['track']
+        return self.model_iterator(common.RecentTrack, resp)
 
-    def get_top_albums(self, user, period=None):
+    def get_top_albums(self, username=None, period=None, limit=None):
         """
         Get the top albums listened to by a user. Valid periods are 'overall',
         '7day', '1month', '3month', '6month', and '12month' (default:
@@ -117,15 +161,24 @@ class User(API):
         if period is not None and period not in VALID_PERIODS:
             raise ValueError('Invalid period: {0}'.format(period))
 
-        return self._client._paginate_request(
+        perpage = min(30, limit) if limit else 30
+
+        resp = self._client._paginate_request(
             'GET',
             'user.getTopAlbums',
             'album',
+            params=dict(
+                user=username or self._client.username,
+                period=period
+            ),
+            limit=limit,
+            perpage=perpage,
             unwrap='topalbums',
-            params=dict(user=user, period=period),
         )['album']
 
-    def get_top_artists(self, user, period=None):
+        return self.model_iterator(common.Album, resp)
+
+    def get_top_artists(self, username=None, period=None, limit=None):
         """
         Get the top artists lsitened to by a user. Valid periods are 'overall',
         '7day', '1month', '3month', '6month', and '12month' (default:
@@ -136,28 +189,40 @@ class User(API):
         if period is not None and period not in VALID_PERIODS:
             raise ValueError('Invalid period: {0}'.format(period))
 
-        return self._client._paginate_request(
+        perpage = min(30, limit) if limit else 30
+
+        resp = self._client._paginate_request(
             'GET',
             'user.getTopArtists',
             'artist',
+            params=dict(
+                user=username or self._client.username,
+                period=period
+            ),
+            limit=limit,
+            perpage=perpage,
             unwrap='topartists',
-            params=dict(user=user, period=period),
         )['artist']
 
-    def get_top_tags(self, user):
+        return self.model_iterator(Artist, resp)
+
+    def get_top_tags(self, username=None):
         """
-        Get the top tags used by this user.
+        Get the top tags used by this user.  Note that this is currently
+        broken in the API.
 
         http://www.last.fm/api/show/user.getTopTags
         """
         return self._client._request(
             'GET',
             'user.getTopTags',
+            params=dict(
+                user=username or self._client.username,
+            ),
             unwrap='toptags',
-            params=dict(user=user),
         )['tag']
 
-    def get_top_tracks(self, user, period=None):
+    def get_top_tracks(self, username=None, period=None, limit=None):
         """
         Get the top tracks listened to by a user. Valid periods are 'overall',
         '7day', '1month', '3month', '6month', and '12month' (default:
@@ -168,15 +233,24 @@ class User(API):
         if period is not None and period not in VALID_PERIODS:
             raise ValueError('Invalid period: {0}'.format(period))
 
-        return self._client._paginate_request(
+        perpage = min(30, limit) if limit else 30
+
+        resp = self._client._paginate_request(
             'GET',
             'user.getTopTracks',
             'track',
+            params=dict(
+                user=username or self._client.username,
+                period=period,
+            ),
+            limit=limit,
+            perpage=perpage,
             unwrap='toptracks',
-            params=dict(user=user, period=period),
         )['track']
 
-    def get_weekly_album_chart(self, user, start=None, end=None):
+        return self.model_iterator(common.TagTrack, resp)
+
+    def get_weekly_album_chart(self, username, start=None, end=None):
         """
         Get an album chart for a user profile, for a given date range. If no
         date range is supplied, it will return the most recent album chart for
@@ -184,16 +258,20 @@ class User(API):
 
         http://www.last.fm/api/show/user.getWeeklyAlbumChart
         """
-        return self._client._request(
+        resp = self._client._request(
             'GET',
             'user.getWeeklyAlbumChart',
             unwrap='weeklyalbumchart',
-            params={'user': user,
-                    'from': query_date(start),
-                    'to': query_date(end)},
+            params={
+                'user': username,
+                'from': query_date(start),
+                'to': query_date(end)
+            },
         )['album']
 
-    def get_weekly_artist_chart(self, user, start=None, end=None):
+        return [self.model(ChartAlbum, item) for item in resp]
+
+    def get_weekly_artist_chart(self, username, start=None, end=None):
         """
         Get an artist chart for a user profile, for a given date range. If no
         date range is supplied, it will return the most recent artist chart for
@@ -201,30 +279,34 @@ class User(API):
 
         http://www.last.fm/api/show/user.getWeeklyArtistChart
         """
-        return self._client._request(
+        resp = self._client._request(
             'GET',
             'user.getWeeklyArtistChart',
             unwrap='weeklyartistchart',
-            params={'user': user,
+            params={'user': username,
                     'from': query_date(start),
                     'to': query_date(end)},
         )['artist']
 
-    def get_weekly_chart_list(self, user):
+        return [self.model(ChartArtist, item) for item in resp]
+
+    def get_weekly_chart_list(self, username):
         """
         Get a list of available charts for this user, expressed as date ranges
         which can be sent to the chart services
 
         http://www.last.fm/api/show/user.getWeeklyChartList
         """
-        return self._client._request(
+        resp = self._client._request(
             'GET',
             'user.getWeeklyChartList',
             unwrap='weeklychartlist',
-            params=dict(user=user),
+            params=dict(user=username),
         )['chart']
 
-    def get_weekly_track_chart(self, user, start=None, end=None):
+        return [self.model(ChartItem, item) for item in resp]
+
+    def get_weekly_track_chart(self, username, start=None, end=None):
         """
         Get an track chart for a user profile, for a given date range. If no
         date range is supplied, it will return the most recent track chart for
@@ -232,11 +314,15 @@ class User(API):
 
         http://www.last.fm/api/show/user.getWeeklyTrackChart
         """
-        return self._client._request(
+        resp = self._client._request(
             'GET',
             'user.getWeeklyTrackChart',
+            params={
+                'user': username,
+                'from': query_date(start),
+                'to': query_date(end)
+            },
             unwrap='weeklytrackchart',
-            params={'user': user,
-                    'from': query_date(start),
-                    'to': query_date(end)},
         )['track']
+
+        return [self.model(ChartTrack, item) for item in resp]
