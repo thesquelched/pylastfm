@@ -305,6 +305,14 @@ class SearchArtist(ApiConfig):
     listeners = Field(int, required=True)
 
 
+class LibraryArtist(ApiConfig):
+
+    __inherits__ = [_ArtistBase]
+
+    playcount = Field(int, required=True)
+    tagcount = Field(int, required=True)
+
+
 class Album(ApiConfig):
 
     name = Field(six.text_type, required=True)
