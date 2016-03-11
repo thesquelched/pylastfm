@@ -145,6 +145,18 @@ class TagTrack(ApiConfig):
     streamable = Field(bool_from_int, required=True)
     rank = Field(extract('rank', coerce=int), key='@attr', required=True)
 
+    artist_name = Field(extract('name'), key='artist', required=True)
+    artist_mbid = Field(extract('mbid', coerce=string_or_null), key='artist',
+                        required=True)
+    artist_url = Field(extract('url', coerce=string_or_null), key='artist')
+
+
+class GeoTrack(ApiConfig):
+
+    __inherits__ = [TagTrack]
+
+    listeners = Field(int, required=True)
+
 
 class ArtistTrack(ApiConfig):
 
@@ -298,6 +310,13 @@ class _ArtistBase(Config):
     url = Field(six.text_type)
     streamable = Field(bool_from_int)
     images = Field(images, default=[], key='image')
+
+
+class GeoArtist(ApiConfig):
+
+    __inherits__ = [_ArtistBase]
+
+    listeners = Field(int, required=True)
 
 
 class SimilarArtist(ApiConfig):

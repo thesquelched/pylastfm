@@ -65,6 +65,7 @@ Changelog
             'six>=1.9.0',
             'python-dateutil>=2.4.0',
             'figgis>=1.6.0',
+            'iso3166>=0.7',
         ],
 
         classifiers=[
@@ -72,9 +73,11 @@ Changelog
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License',
             'Operating System :: OS Independent',
-            'Programming Language :: Python :: 3.2',
+            'Programming Language :: Python :: 2.6',
+            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3.5',
             'Topic :: Software Development :: Libraries',
         ]
     )

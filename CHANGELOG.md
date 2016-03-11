@@ -23,6 +23,7 @@
 - Add artist API resource
 - Add library API resource
 - Add tag API resource
+- Add geo API resource
 
 0.1.1
 -----
